@@ -1,11 +1,13 @@
 ---
-description: "Remove near-duplicate clips using semantic clustering and pairwise similarity"
-categories: ["video-curation"]
-tags: ["deduplication", "semantic", "pairwise", "kmeans", "video"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+description: Remove near-duplicate clips using semantic clustering and pairwise similarity
+topics: [video-curation]
+tags: [deduplication, semantic, pairwise, kmeans, video]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-dedup)=

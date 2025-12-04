@@ -1,11 +1,13 @@
 ---
 description: "Understanding data flow in video curation pipelines including Ray object store and streaming optimization"
-categories: ["concepts-architecture"]
-tags: ["data-flow", "distributed", "ray", "streaming", "performance", "video-curation"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "video-only"
+topics: [concepts-architecture]
+tags: [data-flow, distributed, ray, streaming, performance, video-curation]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (about-concepts-video-data-flow)=

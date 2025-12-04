@@ -1,11 +1,13 @@
 ---
 description: "Guide to using NeMo Framework's pretrained ASR models for speech recognition in audio curation pipelines"
-categories: ["audio-processing"]
-tags: ["nemo-models", "asr-models", "pretrained", "multilingual", "model-selection"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "audio-only"
+topics: [audio-processing]
+tags: [nemo-models, asr-models, pretrained, multilingual, model-selection]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 # NeMo ASR Models

@@ -1,11 +1,13 @@
 ---
-description: "Load audio files from local directories by creating custom manifests"
-categories: ["data-loading"]
-tags: ["local-files", "custom-manifests", "audio-discovery"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-only"
+description: Load audio files from local directories by creating custom manifests
+topics: [data-loading]
+tags: [local-files, custom-manifests, audio-discovery]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-load-data-local)=

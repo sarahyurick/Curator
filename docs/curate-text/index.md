@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive text curation capabilities for preparing high-quality data for large language model training with loading, filtering, and quality assessment"
-categories: ["workflows"]
-tags: ["text-curation", "data-loading", "filtering", "deduplication", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "workflow"
-modality: "text-only"
+topics: [workflows]
+tags: [text-curation, data-loading, filtering, deduplication, gpu-accelerated]
+content:
+  type: Workflow
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-overview)=

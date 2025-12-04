@@ -1,11 +1,13 @@
 ---
-description: "Generate clip-level embeddings using Cosmos-Embed1 or InternVideo2"
-categories: ["video-curation"]
-tags: ["embeddings", "cosmos-embed1", "internvideo2", "video"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+description: Generate clip-level embeddings using Cosmos-Embed1 or InternVideo2
+topics: [video-curation]
+tags: [embeddings, cosmos-embed1, internvideo2, video]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-embeddings)=

@@ -1,12 +1,13 @@
 ---
 description: "Guide to creating and managing custom Docker environments for specialized video curation pipeline requirements"
-categories: ["video-curation"]
-tags: ["customization", "docker", "environments", "pipeline", "deployment", "advanced"]
-personas: ["mle-focused", "devops-focused"]
-difficulty: "advanced"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [customization, docker, environments, pipeline, deployment, advanced]
+content:
+  type: Tutorial
+  difficulty: Advanced
+  audience: [Machine Learning Engineer, DevOps Professional]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-pipeline-cust-env)=

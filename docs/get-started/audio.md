@@ -1,11 +1,13 @@
 ---
 description: "Step-by-step guide to setting up and running your first audio curation pipeline with NeMo Curator"
-categories: ["getting-started"]
-tags: ["audio-curation", "installation", "quickstart", "asr-inference", "quality-filtering", "nemo-toolkit"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "audio-only"
+topics: [getting-started]
+tags: [audio-curation, installation, quickstart, asr-inference, quality-filtering, nemo-toolkit]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (gs-audio)=

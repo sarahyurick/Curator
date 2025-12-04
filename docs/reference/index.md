@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive technical reference for NeMo Curator APIs, infrastructure components, and integration tools"
-categories: ["reference"]
-tags: ["python-api", "infrastructure", "integrations-apis", "distributed", "gpu-accelerated"]
-personas: ["mle-focused", "data-scientist-focused", "admin-focused"]
-difficulty: "reference"
-content_type: "reference"
-modality: "universal"
+topics: [AI, API Reference]
+tags: [python-api, infrastructure, integrations, distributed, gpu-accelerated]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Data Scientist, Cluster Administrator]
+facets:
+  modality: universal
 ---
 
 (ref-overview)=

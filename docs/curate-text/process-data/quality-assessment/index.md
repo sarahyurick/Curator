@@ -1,11 +1,13 @@
 ---
 description: "Score and remove low-quality content using heuristics and ML classifiers with comprehensive filtering capabilities"
-categories: ["workflows"]
-tags: ["quality-assessment", "filtering", "heuristic", "classifier", "distributed", "scoring"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "text-only"
+topics: [workflows]
+tags: [quality-assessment, filtering, heuristic, classifier, distributed, scoring]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-filter)=

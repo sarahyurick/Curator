@@ -1,11 +1,13 @@
 ---
 description: "Modality-level overview of ingest, validation, optional ASR, metrics, filtering, and export"
-categories: ["concepts-architecture"]
-tags: ["audio-pipeline", "overview", "ingest", "metrics", "filtering", "export"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "audio-only"
+topics: [concepts-architecture]
+tags: [audio-pipeline, overview, ingest, metrics, filtering, export]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (about-concepts-audio-curation-pipeline)=

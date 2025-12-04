@@ -1,12 +1,13 @@
 ---
 description: "Advanced tutorial for adding custom processing stages to video curation pipelines for specialized workflow requirements"
-categories: ["video-curation"]
-tags: ["customization", "pipeline", "stages", "workflow", "advanced", "development"]
-personas: ["mle-focused"]
-difficulty: "advanced"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [customization, pipeline, stages, workflow, advanced, development]
+content:
+  type: Tutorial
+  difficulty: Advanced
+  audience: [Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-pipeline-cust-add-stage)=

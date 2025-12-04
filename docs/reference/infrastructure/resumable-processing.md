@@ -1,11 +1,13 @@
 ---
 description: "Implementation guide for resumable processing to handle interrupted large-scale data operations in NeMo Curator"
-categories: ["reference"]
-tags: ["batch-processing", "large-scale", "optimization", "python-api", "configuration", "monitoring"]
-personas: ["mle-focused", "admin-focused"]
-difficulty: "intermediate"
-content_type: "reference"
-modality: "universal"
+topics: [reference]
+tags: [batch-processing, large-scale, optimization, python-api, configuration, monitoring]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Cluster Administrator]
+facets:
+  modality: universal
 ---
 
 (reference-infra-resumable-processing)=

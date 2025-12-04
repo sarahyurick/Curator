@@ -1,11 +1,13 @@
 ---
 description: "Filter audio samples by duration ranges, speech rate metrics, and temporal characteristics for optimal dataset quality"
-categories: ["audio-processing"]
-tags: ["duration-filtering", "speech-rate", "temporal-filtering", "audio-length", "quality-control"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-only"
+topics: [audio-processing]
+tags: [duration-filtering, speech-rate, temporal-filtering, audio-length, quality-control]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 # Duration Filtering

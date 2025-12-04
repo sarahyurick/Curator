@@ -1,12 +1,13 @@
 ---
 description: "Advanced tutorials for customizing NeMo Curator video pipelines including adding custom code, models, stages, and environments"
-categories: ["video-curation"]
-tags: ["customization", "pipeline", "advanced", "models", "docker", "environments", "custom-code"]
-personas: ["mle-focused"]
-difficulty: "advanced"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [customization, pipeline, advanced, models, docker, environments, custom-code]
+content:
+  type: Tutorial
+  difficulty: Advanced
+  audience: [Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-pipeline-cust-series)=

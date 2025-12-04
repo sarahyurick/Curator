@@ -1,11 +1,13 @@
 ---
 description: "NSFW filter for detecting inappropriate content in images using CLIP embeddings and MLP architecture"
-categories: ["how-to-guides"]
-tags: ["nsfw", "filtering", "clip", "safety", "content-filtering"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "image-only"
+topics: [how-to-guides]
+tags: [nsfw, filtering, clip, safety, content-filtering]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-process-data-filters-nsfw)=

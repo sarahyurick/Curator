@@ -1,12 +1,13 @@
 ---
 description: "Beginner-friendly tutorial for running your first Ray-based video splitting pipeline using the Python example"
-categories: ["video-curation"]
-tags: ["beginner", "tutorial", "quickstart", "pipeline", "video-processing", "ray", "python"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [AI, Video Processing]
+tags: [tutorial, quickstart, pipeline, video-processing, ray, python]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-beginner)=

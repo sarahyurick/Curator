@@ -1,11 +1,13 @@
 ---
 description: "Core concepts for loading and managing image datasets from tar archives with cloud storage support"
-categories: ["concepts-architecture"]
-tags: ["data-loading", "tar-archives", "dali", "cloud-storage", "sharding", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "image-only"
+topics: [concepts-architecture]
+tags: [data-loading, tar-archives, dali, cloud-storage, sharding, gpu-accelerated]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (about-concepts-image-data-loading)=

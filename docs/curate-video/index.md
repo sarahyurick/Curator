@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive guide to Ray-based video curation with NeMo Curator including splitting and deduplication pipelines for large-scale processing"
-categories: ["video-curation"]
-tags: ["video-processing", "gpu-accelerated", "pipeline", "distributed", "ray", "splitting", "deduplication", "autoscaling"]
-personas: ["mle-focused", "data-scientist-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "video-only"
+topics: [video-curation]
+tags: [video-processing, gpu-accelerated, pipeline, distributed, ray, splitting, deduplication, autoscaling]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Data Scientist]
+facets:
+  modality: video-only
 ---
 
 (video-overview)=

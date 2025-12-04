@@ -1,11 +1,13 @@
 ---
-description: "Split videos into clips using fixed stride or TransNetV2 scene-change detection"
-categories: ["video-curation"]
-tags: ["clipping", "fixed-stride", "transnetv2", "video"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+description: Split videos into clips using fixed stride or TransNetV2 scene-change detection
+topics: [video-curation]
+tags: [clipping, fixed-stride, transnetv2, video]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-clipping)=

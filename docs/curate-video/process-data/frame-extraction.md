@@ -1,11 +1,13 @@
 ---
 description: "Extract frames from clips or full videos for embeddings, filtering, and analysis"
-categories: ["video-curation"]
-tags: ["frames", "extraction", "fps", "ffmpeg", "nvdec"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+topics: [video-curation]
+tags: [frames, extraction, fps, ffmpeg, nvdec]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-frame-extraction)=

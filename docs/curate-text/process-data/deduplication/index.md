@@ -1,11 +1,13 @@
 ---
 description: "Remove duplicate and near-duplicate documents efficiently using GPU-accelerated and semantic deduplication modules"
-categories: ["workflows"]
-tags: ["deduplication", "fuzzy-dedup", "semantic-dedup", "exact-dedup", "gpu-accelerated", "minhash"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "explanation"
-modality: "text-only"
+topics: [workflows]
+tags: [deduplication, fuzzy-dedup, semantic-dedup, exact-dedup, gpu-accelerated, minhash]
+content:
+  type: Explanation
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-dedup)=

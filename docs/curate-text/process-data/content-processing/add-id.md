@@ -1,11 +1,13 @@
 ---
 description: "Add unique identifiers to documents in your text dataset for tracking and deduplication workflows"
-categories: ["text-curation"]
-tags: ["preprocessing", "identifiers", "document-tracking", "pipeline"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "text-only"
+topics: [text-curation]
+tags: [preprocessing, identifiers, document-tracking, pipeline]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-add-id)=

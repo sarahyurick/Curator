@@ -1,11 +1,13 @@
 ---
 description: "Generate CLIP embeddings for images using OpenAI's ViT-L/14 model for downstream classification and filtering tasks"
-categories: ["how-to-guides"]
-tags: ["embedding", "clip", "vit", "gpu-accelerated", "pipeline-stage"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "image-only"
+topics: [how-to-guides]
+tags: [embedding, clip, vit, gpu-accelerated, pipeline-stage]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-process-data-embeddings-clip)=

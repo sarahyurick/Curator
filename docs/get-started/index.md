@@ -1,11 +1,13 @@
 ---
 description: "Quickstart guides for getting started with NeMo Curator across text, image, and video modalities with minimal setup"
-categories: ["getting-started"]
-tags: ["quickstart", "installation", "python-api", "tutorial"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "universal"
+topics: [AI, Data Curation]
+tags: [quickstart, installation, python-api, tutorial]
+content:
+  type: Get Started
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: universal
 ---
 
 (gs-overview)=

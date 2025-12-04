@@ -1,11 +1,13 @@
 ---
 description: "Step-by-step guide to installing Curator and running your first video curation pipeline"
-categories: ["getting-started"]
-tags: ["video-curation", "installation", "quickstart", "gpu-accelerated", "ray", "python"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "video-only"
+topics: [getting-started]
+tags: [video-curation, installation, quickstart, gpu-accelerated, ray, python]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (gs-video)=

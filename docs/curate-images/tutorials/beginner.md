@@ -1,12 +1,13 @@
 ---
 description: "Beginner-friendly tutorial for creating your first image curation pipeline with quality filtering and NSFW detection"
-categories: ["image-curation"]
-tags: ["beginner", "tutorial", "quickstart", "pipeline", "image-processing", "quality-filtering", "nsfw-detection"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "image-only"
-
+topics: [image-curation]
+tags: [beginner, tutorial, quickstart, pipeline, image-processing, quality-filtering, nsfw-detection]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-tutorials-beginner)=

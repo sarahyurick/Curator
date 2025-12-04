@@ -1,11 +1,13 @@
 ---
 description: "Strategies and best practices for managing memory when processing large datasets with NeMo Curator"
-categories: ["reference"]
-tags: ["memory-management", "optimization", "large-scale", "batch-processing", "monitoring", "performance"]
-personas: ["mle-focused", "admin-focused"]
-difficulty: "intermediate"
-content_type: "reference"
-modality: "universal"
+topics: [reference]
+tags: [memory-management, optimization, large-scale, batch-processing, monitoring, performance]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Cluster Administrator]
+facets:
+  modality: universal
 ---
 
 (reference-infra-memory-management)=

@@ -1,11 +1,13 @@
 ---
-description: "Download and extract text from Common Crawl web archives using Curator."
-categories: ["how-to-guides"]
-tags: ["common-crawl", "web-data", "warc", "language-detection", "distributed", "html-extraction", "pipeline"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+description: Download and extract text from Common Crawl web archives using Curator.
+topics: [how-to-guides]
+tags: [common-crawl, web-data, warc, language-detection, distributed, html-extraction, pipeline]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-load-data-common-crawl)=

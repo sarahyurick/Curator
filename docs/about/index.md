@@ -1,11 +1,13 @@
 ---
 description: "Overview of NeMo Curator, an open-source platform for scalable data curation across text, image, video, and audio modalities for AI training"
-categories: ["getting-started"]
-tags: ["overview", "platform", "multimodal", "enterprise", "getting-started"]
-personas: ["data-scientist-focused", "mle-focused", "admin-focused", "devops-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "universal"
+topics: [AI, Data Curation]
+tags: [overview, platform, multimodal, enterprise]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer, Cluster Administrator, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (about-overview)=

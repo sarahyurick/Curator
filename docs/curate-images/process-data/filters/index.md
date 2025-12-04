@@ -1,11 +1,13 @@
 ---
 description: "Image filtering tools including aesthetic and NSFW filters for dataset quality control"
-categories: ["workflows"]
-tags: ["filtering", "aesthetic", "nsfw", "quality-filtering", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "image-only"
+topics: [workflows]
+tags: [filtering, aesthetic, nsfw, quality-filtering, gpu-accelerated]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-process-data-filters)=

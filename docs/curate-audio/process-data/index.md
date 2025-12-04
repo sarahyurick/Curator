@@ -1,11 +1,13 @@
 ---
 description: "Process audio data using ASR inference, quality assessment, audio analysis, and text integration for high-quality speech datasets"
-categories: ["workflows"]
-tags: ["audio-processing", "asr-inference", "quality-assessment", "audio-analysis", "text-integration", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "audio-only"
+topics: [workflows]
+tags: [audio-processing, asr-inference, quality-assessment, audio-analysis, text-integration, gpu-accelerated]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 # Process Data for Audio Curation

@@ -1,11 +1,13 @@
 ---
 description: "Core concepts for loading and managing text datasets using pipeline-based readers and DocumentBatch tasks"
-categories: ["concepts-architecture"]
-tags: ["data-loading", "document-dataset", "parallel-dataset", "distributed", "gpu-accelerated", "local-files"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "text-only"
+topics: [concepts-architecture]
+tags: [data-loading, document-dataset, parallel-dataset, distributed, gpu-accelerated, local-files]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (about-concepts-text-data-loading)=

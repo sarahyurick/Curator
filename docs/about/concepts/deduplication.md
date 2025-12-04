@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive overview of deduplication techniques across text, image, and video modalities including exact, fuzzy, and semantic approaches"
-categories: ["concepts-architecture"]
-tags: ["deduplication", "exact-dedup", "fuzzy-dedup", "semantic-dedup", "multimodal", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "multimodal"
+topics: [concepts-architecture]
+tags: [deduplication, exact-dedup, fuzzy-dedup, semantic-dedup, multimodal, gpu-accelerated]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: multimodal
 ---
 
 (about-concepts-deduplication)=

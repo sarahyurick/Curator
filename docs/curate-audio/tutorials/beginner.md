@@ -1,11 +1,13 @@
 ---
-description: "Beginner tutorial for audio processing using the FLEURS dataset"
-categories: ["tutorials"]
-tags: ["beginner", "fleurs-dataset", "asr-inference", "quality-filtering"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "audio-only"
+description: Beginner tutorial for audio processing using the FLEURS dataset
+topics: [tutorials]
+tags: [beginner, fleurs-dataset, asr-inference, quality-filtering]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-tutorials-beginner)=

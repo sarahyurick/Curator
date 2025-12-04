@@ -1,11 +1,13 @@
 ---
 description: "Architecture overview of NeMo Curator's Ray-based distributed video curation system with autoscaling"
-categories: ["concepts-architecture"]
-tags: ["architecture", "distributed", "ray", "autoscaling", "video-curation", "performance"]
-personas: ["data-scientist-focused", "mle-focused", "admin-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "video-only"
+topics: [concepts-architecture]
+tags: [architecture, distributed, ray, autoscaling, video-curation, performance]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer, Cluster Administrator]
+facets:
+  modality: video-only
 only: not ga
 ---
 

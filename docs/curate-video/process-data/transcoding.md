@@ -1,13 +1,14 @@
 ---
-description: "Transcode clips with CPU or GPU encoders and tune for quality and performance"
-categories: ["video-curation"]
-tags: ["transcoding", "encoding", "ffmpeg", "nvenc", "h264"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+description: Transcode clips with CPU or GPU encoders and tune for quality and performance
+topics: [video-curation]
+tags: [transcoding, encoding, ffmpeg, nvenc, h264]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
-
 
 (video-process-transcoding)=
 

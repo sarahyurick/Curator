@@ -1,11 +1,13 @@
 ---
 description: "Understanding the AudioBatch data structure for efficient audio file management and validation in NeMo Curator"
-categories: ["concepts-architecture"]
-tags: ["data-structures", "audiobatch", "audio-validation", "batch-processing", "file-management"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "audio-only"
+topics: [concepts-architecture]
+tags: [data-structures, audiobatch, audio-validation, batch-processing, file-management]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (about-concepts-audio-audio-batch)=

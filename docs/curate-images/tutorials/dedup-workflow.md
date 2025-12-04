@@ -1,12 +1,13 @@
 ---
 description: "End-to-end workflow tutorial covering the image curation process from embedding generation through semantic deduplication"
-categories: ["image-curation"]
-tags: ["workflow", "pipeline", "image-embeddings", "deduplication", "semantic", "clustering"]
-personas: ["mle-focused", "data-scientist-focused"]
-difficulty: "intermediate"
-content_type: "tutorial"
-modality: "image-only"
-
+topics: [image-curation]
+tags: [workflow, pipeline, image-embeddings, deduplication, semantic, clustering]
+content:
+  type: Tutorial
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Data Scientist]
+facets:
+  modality: image-only
 ---
 
 (image-tutorials-dedup)=

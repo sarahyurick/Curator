@@ -1,11 +1,13 @@
 ---
 description: "Collection of tutorials for audio curation workflows including beginner guides and advanced quality assessment techniques"
-categories: ["audio-curation"]
-tags: ["tutorial", "audio-processing", "asr-inference", "quality-assessment", "fleurs-dataset"]
-personas: ["mle-focused", "data-scientist-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "audio-only"
+topics: [audio-curation]
+tags: [tutorial, audio-processing, asr-inference, quality-assessment, fleurs-dataset]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Machine Learning Engineer, Data Scientist]
+facets:
+  modality: audio-only
 ---
 
 (audio-tutorials)=

@@ -1,11 +1,13 @@
 ---
 description: "Process video data by splitting into clips, encoding, generating embeddings and captions, and removing duplicates"
-categories: ["video-curation"]
-tags: ["splitting", "encoding", "embeddings", "captioning", "deduplication"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "video-only"
+topics: [video-curation]
+tags: [splitting, encoding, embeddings, captioning, deduplication]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-data)=

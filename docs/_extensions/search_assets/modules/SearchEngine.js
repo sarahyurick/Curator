@@ -9,12 +9,13 @@ class SearchEngine {
         this.index = null;
         this.documents = {};
         this.isInitialized = false;
-        this.categories = new Set();
+        // v2 schema field names
+        this.topics = new Set();        // was categories
         this.tags = new Set();
-        this.documentTypes = new Set();
-        this.personas = new Set();
-        this.difficulties = new Set();
-        this.modalities = new Set();
+        this.contentTypes = new Set();  // was documentTypes, from content.type
+        this.audiences = new Set();     // was personas, from content.audience
+        this.difficulties = new Set();  // from content.difficulty
+        this.modalities = new Set();    // from facets.modality
     }
     
     /**
@@ -33,28 +34,30 @@ class SearchEngine {
     }
     
     /**
-     * Collect metadata for filtering (categories, tags, types) using actual frontmatter values
+     * Collect metadata for filtering using v2 schema with legacy fallbacks
+     * v2 schema uses nested fields: content.type, content.audience, facets.modality
      */
     collectMetadata() {
         // Clear existing sets
-        this.categories = new Set();
+        this.topics = new Set();
         this.tags = new Set();
-        this.documentTypes = new Set();
-        this.personas = new Set();
+        this.contentTypes = new Set();
+        this.audiences = new Set();
         this.difficulties = new Set();
         this.modalities = new Set();
         
         Object.values(this.documents).forEach(doc => {
-            // Collect actual frontmatter categories (primary taxonomy)
-            if (doc.categories) {
-                if (Array.isArray(doc.categories)) {
-                    doc.categories.forEach(cat => this.categories.add(cat));
-                } else if (typeof doc.categories === 'string') {
-                    doc.categories.split(',').forEach(cat => this.categories.add(cat.trim()));
+            // Collect topics (v2) or categories (legacy)
+            const topics = doc.topics || doc.categories;
+            if (topics) {
+                if (Array.isArray(topics)) {
+                    topics.forEach(topic => this.topics.add(topic));
+                } else if (typeof topics === 'string') {
+                    topics.split(',').forEach(topic => this.topics.add(topic.trim()));
                 }
             }
             
-            // Collect actual frontmatter tags
+            // Collect tags (same in both schemas)
             if (doc.tags) {
                 if (Array.isArray(doc.tags)) {
                     doc.tags.forEach(tag => {
@@ -83,39 +86,45 @@ class SearchEngine {
                 }
             }
             
-            // Use actual content_type from frontmatter (not calculated doc_type)
-            if (doc.content_type) {
-                this.documentTypes.add(doc.content_type);
+            // Collect content type: v2 nested (content.type) or legacy flat (content_type)
+            const contentType = doc.content?.type || doc.content_type;
+            if (contentType) {
+                this.contentTypes.add(contentType);
             }
             
-            // Collect rich frontmatter taxonomy fields
-            if (doc.personas) {
-                if (Array.isArray(doc.personas)) {
-                    doc.personas.forEach(persona => this.personas.add(persona));
-                } else if (typeof doc.personas === 'string') {
-                    this.personas.add(doc.personas);
+            // Collect audience: v2 nested (content.audience) or legacy flat (personas)
+            const audience = doc.content?.audience || doc.personas;
+            if (audience) {
+                if (Array.isArray(audience)) {
+                    audience.forEach(a => this.audiences.add(a));
+                } else if (typeof audience === 'string') {
+                    this.audiences.add(audience);
                 }
             }
             
-            if (doc.difficulty) {
-                this.difficulties.add(doc.difficulty);
+            // Collect difficulty: v2 nested (content.difficulty) or legacy flat (difficulty)
+            const difficulty = doc.content?.difficulty || doc.difficulty;
+            if (difficulty) {
+                this.difficulties.add(difficulty);
             }
             
-            if (doc.modality) {
-                this.modalities.add(doc.modality);
+            // Collect modality: v2 nested (facets.modality) or legacy flat (modality)
+            const modality = doc.facets?.modality || doc.modality;
+            if (modality) {
+                this.modalities.add(modality);
             }
         });
     }
     
     /**
-     * Get available filter options using actual frontmatter taxonomy
+     * Get available filter options using v2 schema field names
      */
     getFilterOptions() {
         return {
-            categories: Array.from(this.categories).sort(),
+            topics: Array.from(this.topics).sort(),
             tags: Array.from(this.tags).sort(),
-            documentTypes: Array.from(this.documentTypes).sort(),
-            personas: Array.from(this.personas).sort(),
+            contentTypes: Array.from(this.contentTypes).sort(),
+            audiences: Array.from(this.audiences).sort(),
             difficulties: Array.from(this.difficulties).sort(),
             modalities: Array.from(this.modalities).sort()
         };
@@ -131,7 +140,7 @@ class SearchEngine {
     }
     
     /**
-     * Build the Lunr search index
+     * Build the Lunr search index with v2 schema support
      */
     buildIndex() {
         const documentsArray = Object.values(this.documents);
@@ -147,31 +156,38 @@ class SearchEngine {
             this.field('headings_text', { boost: 7 });
             this.field('keywords', { boost: 9 });
             this.field('tags', { boost: 4 });
-            this.field('categories', { boost: 3 });
-            this.field('content_type', { boost: 2 }); // Use actual frontmatter content_type
-            this.field('personas', { boost: 3 }); // Add personas field
-            this.field('difficulty', { boost: 2 }); // Add difficulty field
-            this.field('modality', { boost: 2 }); // Add modality field
+            this.field('topics', { boost: 3 });         // v2: was categories
+            this.field('content_type', { boost: 2 });   // From content.type
+            this.field('audience', { boost: 3 });       // v2: was personas, from content.audience
+            this.field('difficulty', { boost: 2 });     // From content.difficulty
+            this.field('modality', { boost: 2 });       // From facets.modality
             this.field('section_path', { boost: 1 });
             this.field('author', { boost: 1 });
             
             // Add documents to index
             documentsArray.forEach((doc) => {
                 try {
+                    // Handle v2 schema: content can be object (classification) or string (markdown)
+                    // If content is object, use content_text for markdown
+                    const markdownContent = typeof doc.content === 'object' 
+                        ? (doc.content_text || '').substring(0, 5000)
+                        : (doc.content || '').substring(0, 5000);
+                    
                     this.add({
                         id: doc.id,
                         title: doc.title || '',
-                        content: (doc.content || '').substring(0, 5000), // Limit content length
+                        content: markdownContent, // Limit content length
                         summary: doc.summary || '',
                         headings: self.extractHeadingsText(doc.headings),
                         headings_text: doc.headings_text || '',
                         keywords: self.arrayToString(doc.keywords),
                         tags: self.arrayToString(doc.tags),
-                        categories: self.arrayToString(doc.categories),
-                        content_type: doc.content_type || '', // Use actual frontmatter content_type
-                        personas: self.arrayToString(doc.personas), // Add actual frontmatter personas
-                        difficulty: doc.difficulty || '', // Add actual frontmatter difficulty
-                        modality: doc.modality || '', // Add actual frontmatter modality
+                        // v2 nested fields with legacy fallbacks
+                        topics: self.arrayToString(doc.topics || doc.categories),
+                        content_type: doc.content?.type || doc.content_type || '',
+                        audience: self.arrayToString(doc.content?.audience || doc.personas),
+                        difficulty: doc.content?.difficulty || doc.difficulty || '',
+                        modality: doc.facets?.modality || doc.modality || '',
                         section_path: self.arrayToString(doc.section_path),
                         author: doc.author || ''
                     });
@@ -233,14 +249,15 @@ class SearchEngine {
     }
     
     /**
-     * Apply filters to search results
+     * Apply filters to search results (v2 schema with legacy fallbacks)
      */
     applyFilters(results, filters) {
         return results.filter(result => {
-            // Category filter
-            if (filters.category && filters.category !== '') {
-                const docCategories = this.getDocumentCategories(result);
-                if (!docCategories.includes(filters.category)) {
+            // Topic filter (v2) or category filter (legacy)
+            if ((filters.topic && filters.topic !== '') || (filters.category && filters.category !== '')) {
+                const filterValue = filters.topic || filters.category;
+                const docTopics = this.getDocumentTopics(result);
+                if (!docTopics.includes(filterValue)) {
                     return false;
                 }
             }
@@ -253,31 +270,35 @@ class SearchEngine {
                 }
             }
             
-            // Document type filter (using actual frontmatter content_type)
+            // Content type filter (from content.type or content_type)
             if (filters.type && filters.type !== '') {
-                if (result.content_type !== filters.type) {
+                const contentType = result.content?.type || result.content_type;
+                if (contentType !== filters.type) {
                     return false;
                 }
             }
             
-            // Persona filter
-            if (filters.persona && filters.persona !== '') {
-                const docPersonas = this.getDocumentPersonas(result);
-                if (!docPersonas.includes(filters.persona)) {
+            // Audience filter (v2) or persona filter (legacy)
+            if ((filters.audience && filters.audience !== '') || (filters.persona && filters.persona !== '')) {
+                const filterValue = filters.audience || filters.persona;
+                const docAudiences = this.getDocumentAudiences(result);
+                if (!docAudiences.includes(filterValue)) {
                     return false;
                 }
             }
             
-            // Difficulty filter
+            // Difficulty filter (from content.difficulty or difficulty)
             if (filters.difficulty && filters.difficulty !== '') {
-                if (result.difficulty !== filters.difficulty) {
+                const difficulty = result.content?.difficulty || result.difficulty;
+                if (difficulty !== filters.difficulty) {
                     return false;
                 }
             }
             
-            // Modality filter
+            // Modality filter (from facets.modality or modality)
             if (filters.modality && filters.modality !== '') {
-                if (result.modality !== filters.modality) {
+                const modality = result.facets?.modality || result.modality;
+                if (modality !== filters.modality) {
                     return false;
                 }
             }
@@ -287,32 +308,33 @@ class SearchEngine {
     }
     
     /**
-     * Get categories for a document
+     * Get topics for a document (v2 schema) with legacy categories fallback
      */
-    getDocumentCategories(doc) {
-        const categories = [];
+    getDocumentTopics(doc) {
+        const topics = [];
         
-        // From explicit categories
-        if (doc.categories) {
-            if (Array.isArray(doc.categories)) {
-                categories.push(...doc.categories);
+        // From v2 topics or legacy categories
+        const topicsSource = doc.topics || doc.categories;
+        if (topicsSource) {
+            if (Array.isArray(topicsSource)) {
+                topics.push(...topicsSource);
             } else {
-                categories.push(...doc.categories.split(',').map(c => c.trim()));
+                topics.push(...topicsSource.split(',').map(t => t.trim()));
             }
         }
         
         // From section path
         if (doc.section_path && Array.isArray(doc.section_path)) {
-            categories.push(...doc.section_path);
+            topics.push(...doc.section_path);
         }
         
         // From document ID path
         if (doc.id) {
             const pathParts = doc.id.split('/').filter(part => part && part !== 'index');
-            categories.push(...pathParts);
+            topics.push(...pathParts);
         }
         
-        return [...new Set(categories)]; // Remove duplicates
+        return [...new Set(topics)]; // Remove duplicates
     }
     
     /**
@@ -368,16 +390,18 @@ class SearchEngine {
     
     
     /**
-     * Get personas for a document
+     * Get audiences for a document (v2 schema) with legacy personas fallback
      */
-    getDocumentPersonas(doc) {
-        if (!doc.personas) return [];
+    getDocumentAudiences(doc) {
+        // v2 nested or legacy flat
+        const audiences = doc.content?.audience || doc.personas;
+        if (!audiences) return [];
         
-        if (Array.isArray(doc.personas)) {
-            return doc.personas;
+        if (Array.isArray(audiences)) {
+            return audiences;
         }
         
-        return [doc.personas];
+        return [audiences];
     }
     
     /**
@@ -571,9 +595,10 @@ class SearchEngine {
     getStatistics() {
         return {
             documentsIndexed: Object.keys(this.documents).length,
-            categoriesAvailable: this.categories.size,
+            topicsAvailable: this.topics.size,
             tagsAvailable: this.tags.size,
-            documentTypesAvailable: this.documentTypes.size,
+            contentTypesAvailable: this.contentTypes.size,
+            audiencesAvailable: this.audiences.size,
             isInitialized: this.isInitialized
         };
     }

@@ -1,11 +1,13 @@
 ---
 description: "Identify and remove near-duplicate documents using MinHash and LSH with GPU acceleration"
-categories: ["how-to-guides"]
-tags: ["fuzzy-dedup", "minhash", "lsh", "gpu", "ray"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [fuzzy-dedup, minhash, lsh, gpu, ray]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-dedup-fuzzy)=

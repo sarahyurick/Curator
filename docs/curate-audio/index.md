@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive audio curation capabilities for speech data processing including ASR inference, quality assessment, and text integration workflows"
-categories: ["workflows"]
-tags: ["audio-curation", "asr-inference", "speech-processing", "quality-metrics", "manifests", "text-integration"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "workflow"
-modality: "audio-only"
+topics: [workflows]
+tags: [audio-curation, asr-inference, speech-processing, quality-metrics, manifests, text-integration]
+content:
+  type: Workflow
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-overview)=

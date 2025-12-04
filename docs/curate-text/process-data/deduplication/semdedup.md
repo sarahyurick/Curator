@@ -1,11 +1,13 @@
 ---
 description: "Remove semantically redundant data using embeddings and clustering to identify meaning-based duplicates in large text datasets"
-categories: ["how-to-guides"]
-tags: ["semantic-dedup", "embeddings", "clustering", "similarity", "meaning-based", "advanced"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "advanced"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [semantic-dedup, embeddings, clustering, similarity, meaning-based, advanced]
+content:
+  type: How-To
+  difficulty: Advanced
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-format-sem-dedup)=

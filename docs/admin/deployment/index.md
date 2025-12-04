@@ -1,12 +1,13 @@
 ---
-description: "Deploy NeMo Curator in production environments"
-categories: ["workflows"]
-tags: ["deployment", "production", "infrastructure"]
-personas: ["admin-focused", "devops-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "universal"
-orphan: true
+description: Deploy NeMo Curator in production environments
+topics: [workflows]
+tags: [deployment, production, infrastructure]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Cluster Administrator, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (admin-deployment)=

@@ -1,11 +1,13 @@
 ---
 description: "Generate image embeddings using built-in embedders for classification, filtering, and similarity search"
-categories: ["workflows"]
-tags: ["embedding", "clip", "gpu-accelerated", "similarity-search"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "image-only"
+topics: [workflows]
+tags: [embedding, clip, gpu-accelerated, similarity-search]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-process-data-embeddings)=

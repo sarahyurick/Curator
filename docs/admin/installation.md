@@ -1,11 +1,13 @@
 ---
 description: "Complete installation guide for NeMo Curator with system requirements, package extras, verification steps, and troubleshooting"
-categories: ["getting-started"]
-tags: ["installation", "system-requirements", "pypi", "source-install", "container", "verification", "troubleshooting"]
-personas: ["admin-focused", "devops-focused", "data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "universal"
+topics: [getting-started]
+tags: [installation, system-requirements, pypi, source-install, container, verification, troubleshooting]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Cluster Administrator, DevOps Professional, Data Scientist, Machine Learning Engineer]
+facets:
+  modality: universal
 ---
 
 (admin-installation)=

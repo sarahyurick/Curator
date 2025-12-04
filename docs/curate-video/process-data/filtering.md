@@ -1,11 +1,13 @@
 ---
-description: "Filter clips by motion or aesthetics to improve dataset quality"
-categories: ["video-curation"]
-tags: ["filtering", "motion", "aesthetic", "video"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+description: Filter clips by motion or aesthetics to improve dataset quality
+topics: [video-curation]
+tags: [filtering, motion, aesthetic, video]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-filtering)=

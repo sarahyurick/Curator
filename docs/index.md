@@ -1,22 +1,13 @@
 ---
 description: "NeMo Curator is an open-source, scalable data curation platform for curating large datasets across text, image, video, and audio modalities to improve AI model training"
-categories:
-  - documentation
-  - home
-tags:
-  - data-curation
-  - multimodal
-  - scalable
-  - gpu-accelerated
-  - distributed
-personas:
-  - Data Scientists
-  - Machine Learning Engineers
-  - Cluster Administrators
-  - DevOps Professionals
-difficulty: beginner
-content_type: index
-modality: universal
+topics: [AI, Data Curation]
+tags: [data-curation, multimodal, scalable, gpu-accelerated, distributed]
+content:
+  type: Index
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer, Cluster Administrator, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (curator-home)=

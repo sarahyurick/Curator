@@ -1,11 +1,13 @@
 ---
-description: "Download and extract text from Wikipedia dumps using Curator."
-categories: ["how-to-guides"]
-tags: ["wikipedia", "dumps", "multilingual", "articles", "data-loading"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+description: Download and extract text from Wikipedia dumps using Curator.
+topics: [how-to-guides]
+tags: [wikipedia, dumps, multilingual, articles, data-loading]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-load-data-wikipedia)=

@@ -4,13 +4,28 @@ Rich Metadata Extension for Sphinx
 Injects SEO-optimized metadata into HTML <head> based on frontmatter.
 Supports Open Graph, Twitter Cards, JSON-LD structured data, and standard meta tags.
 
-Frontmatter fields supported:
+Schema v2 Frontmatter Fields (preferred):
+- title.page: Page title for web search
+- title.nav: Navigation title (optional)
+- title.social: Social media title (optional)
 - description: Page description for meta tags
+- social.description: Social media description (optional)
+- social.image: Social media image URL (optional)
+- topics: Topics for search filters (replaces categories)
 - tags: Keywords for SEO
-- personas: Target audience information
-- difficulty: Content difficulty level
-- content_type: Type of content (tutorial, concept, reference, etc.)
-- modality: Content modality (text-only, image-only, video-only, multimodal, universal)
+- content.type: Content type (Tutorial, Concept, Reference, etc.)
+- content.difficulty: Difficulty level (Beginner, Intermediate, Advanced)
+- content.audience: Target audiences (Data Scientist, Machine Learning Engineer, etc.)
+- facets.modality: Content modality (text-only, image-only, video-only, multimodal, universal)
+- dates.last_updated: Last updated date
+- dates.last_reviewed: Last reviewed date
+
+Legacy Fields (supported for backward compatibility):
+- personas → content.audience
+- difficulty → content.difficulty
+- content_type → content.type
+- modality → facets.modality
+- categories → topics
 - cascade.product.name: Product name
 - cascade.product.version: Product version
 """
@@ -33,6 +48,107 @@ except ImportError:
     yaml = None
 
 logger = logging.getLogger(__name__)
+
+
+def normalize_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    """
+    Normalize metadata from legacy schema to v2 schema.
+
+    Supports both legacy flat fields and new nested structure.
+    Returns a normalized dict with v2 schema structure.
+
+    Args:
+        metadata: Raw frontmatter metadata
+
+    Returns:
+        Normalized metadata with v2 schema structure
+    """
+    normalized = dict(metadata)  # Start with a copy
+
+    # === Title normalization ===
+    # v2: title.page, title.nav, title.social
+    # Legacy: title as string (from markdown heading)
+    if "title" not in normalized or not isinstance(normalized.get("title"), dict):
+        # No structured title, will use context title later
+        pass
+
+    # === Content classification normalization ===
+    # v2: content.type, content.difficulty, content.audience
+    # Legacy: content_type, difficulty, personas
+
+    if "content" not in normalized:
+        normalized["content"] = {}
+
+    content = normalized["content"]
+
+    # content_type → content.type
+    if "content_type" in normalized and "type" not in content:
+        content["type"] = normalized["content_type"]
+
+    # difficulty → content.difficulty
+    if "difficulty" in normalized and "difficulty" not in content:
+        content["difficulty"] = normalized["difficulty"]
+
+    # personas → content.audience (with normalization)
+    if "personas" in normalized and "audience" not in content:
+        personas = normalized["personas"]
+        if isinstance(personas, list):
+            # Normalize persona values to human-readable format
+            audience_map = {
+                "data-scientist-focused": "Data Scientist",
+                "mle-focused": "Machine Learning Engineer",
+                "admin-focused": "Cluster Administrator",
+                "devops-focused": "DevOps Professional",
+            }
+            content["audience"] = [audience_map.get(p, p) for p in personas]
+        else:
+            content["audience"] = [personas]
+
+    # === Topics normalization ===
+    # v2: topics
+    # Legacy: categories
+    if "categories" in normalized and "topics" not in normalized:
+        normalized["topics"] = normalized["categories"]
+
+    # === Facets normalization ===
+    # v2: facets.modality
+    # Legacy: modality (top-level)
+    if "facets" not in normalized:
+        normalized["facets"] = {}
+
+    if "modality" in normalized and "modality" not in normalized["facets"]:
+        normalized["facets"]["modality"] = normalized["modality"]
+
+    # === Social metadata normalization ===
+    # v2: social.description, social.image
+    # These are new fields, no legacy mapping needed
+
+    # === Dates normalization ===
+    # v2: dates.last_updated, dates.last_reviewed
+    # These are new fields, no legacy mapping needed
+
+    return normalized
+
+
+def get_nested_value(metadata: dict[str, Any], *keys: str, default: Any = None) -> Any:
+    """
+    Safely get a nested value from metadata dict.
+
+    Args:
+        metadata: Metadata dictionary
+        *keys: Sequence of keys to traverse
+        default: Default value if not found
+
+    Returns:
+        Value at the nested path or default
+    """
+    current = metadata
+    for key in keys:
+        if isinstance(current, dict) and key in current:
+            current = current[key]
+        else:
+            return default
+    return current
 
 
 def extract_frontmatter(env, docname: str) -> dict[str, Any]:  # noqa: ANN001
@@ -79,20 +195,20 @@ def extract_frontmatter(env, docname: str) -> dict[str, Any]:  # noqa: ANN001
     return metadata
 
 
-def build_page_title(_metadata: dict[str, Any], context: dict[str, Any], _pagename: str) -> str | None:
+def build_page_title(metadata: dict[str, Any], context: dict[str, Any], _pagename: str) -> str | None:
     """
     Build enhanced page title in format: Page Title: Section - Site | NVIDIA
 
     Args:
-        metadata: Page frontmatter metadata
+        metadata: Page frontmatter metadata (normalized)
         context: Sphinx page context
         pagename: Document name
 
     Returns:
         Enhanced title string or None to keep default
     """
-    # Get base title
-    page_title = context.get("title", "")
+    # Get base title - prefer title.page from frontmatter, fallback to context
+    page_title = get_nested_value(metadata, "title", "page") or context.get("title", "")
     if not page_title:
         return None
 
@@ -141,18 +257,27 @@ def _add_basic_fields(metadata: dict[str, Any]) -> list[str]:
 def _add_opengraph_fields(metadata: dict[str, Any], context: dict[str, Any]) -> list[str]:
     """Add Open Graph meta tags."""
     og_tags = []
-    if "description" in metadata:
-        og_tags.append(f'<meta property="og:description" content="{metadata["description"]}">')
+
+    # Description: prefer social.description, fallback to description
+    og_description = get_nested_value(metadata, "social", "description") or metadata.get("description")
+    if og_description:
+        og_tags.append(f'<meta property="og:description" content="{og_description}">')
 
     og_tags.append('<meta property="og:type" content="article">')
 
-    enhanced_title = context.get("pagetitle") or context.get("title", "")
-    if enhanced_title:
-        og_tags.append(f'<meta property="og:title" content="{enhanced_title}">')
+    # Title: prefer title.social, fallback to pagetitle/title
+    og_title = get_nested_value(metadata, "title", "social") or context.get("pagetitle") or context.get("title", "")
+    if og_title:
+        og_tags.append(f'<meta property="og:title" content="{og_title}">')
 
     if "pageurl" in context:
         url = context["pageurl"]
         og_tags.append(f'<meta property="og:url" content="{url}">')
+
+    # Image: from social.image
+    og_image = get_nested_value(metadata, "social", "image")
+    if og_image:
+        og_tags.append(f'<meta property="og:image" content="{og_image}">')
 
     return og_tags
 
@@ -160,34 +285,41 @@ def _add_opengraph_fields(metadata: dict[str, Any], context: dict[str, Any]) -> 
 def _add_twitter_fields(metadata: dict[str, Any], context: dict[str, Any]) -> list[str]:
     """Add Twitter Card meta tags."""
     twitter_tags = []
-    if "description" in metadata:
-        twitter_tags.append(f'<meta name="twitter:description" content="{metadata["description"]}">')
 
-    enhanced_title = context.get("pagetitle") or context.get("title", "")
-    if enhanced_title:
-        twitter_tags.append(f'<meta name="twitter:title" content="{enhanced_title}">')
+    # Description: prefer social.description, fallback to description
+    twitter_description = get_nested_value(metadata, "social", "description") or metadata.get("description")
+    if twitter_description:
+        twitter_tags.append(f'<meta name="twitter:description" content="{twitter_description}">')
+
+    # Title: prefer title.social, fallback to pagetitle/title
+    twitter_title = get_nested_value(metadata, "title", "social") or context.get("pagetitle") or context.get("title", "")
+    if twitter_title:
+        twitter_tags.append(f'<meta name="twitter:title" content="{twitter_title}">')
 
     twitter_tags.append('<meta name="twitter:card" content="summary">')
+
+    # Image: from social.image
+    twitter_image = get_nested_value(metadata, "social", "image")
+    if twitter_image:
+        twitter_tags.append(f'<meta name="twitter:image" content="{twitter_image}">')
+
     return twitter_tags
 
 
-def _add_personas_tag(metadata: dict[str, Any]) -> list[str]:
-    """Add personas/audience metadata tag."""
-    if "personas" not in metadata:
+def _add_audience_tag(metadata: dict[str, Any]) -> list[str]:
+    """Add audience metadata tag from content.audience or legacy personas."""
+    # Try v2 schema first: content.audience
+    audience = get_nested_value(metadata, "content", "audience")
+
+    # Fallback to legacy: personas (already normalized in normalize_metadata)
+    if not audience:
         return []
 
-    personas = metadata["personas"]
-    if not isinstance(personas, list):
-        return []
+    if not isinstance(audience, list):
+        audience = [audience]
 
-    audience_map = {
-        "data-scientist-focused": "Data Scientists",
-        "mle-focused": "Machine Learning Engineers",
-        "admin-focused": "Cluster Administrators",
-        "devops-focused": "DevOps Professionals",
-    }
-    audiences = [audience_map.get(p, p) for p in personas]
-    audience_str = ", ".join(audiences)
+    # Values should already be normalized to human-readable format
+    audience_str = ", ".join(audience)
     return [f'<meta name="audience" content="{audience_str}">']
 
 
@@ -216,18 +348,32 @@ def _add_custom_fields(metadata: dict[str, Any]) -> list[str]:
     """Add custom NVIDIA/content metadata tags."""
     custom_tags = []
 
-    # Add personas/audience tags
-    custom_tags.extend(_add_personas_tag(metadata))
+    # Add audience tags (from content.audience or legacy personas)
+    custom_tags.extend(_add_audience_tag(metadata))
 
-    # Add simple content metadata fields
-    if "content_type" in metadata:
-        custom_tags.append(f'<meta name="content-type-category" content="{metadata["content_type"]}">')
+    # Content type: prefer content.type, fallback to content_type
+    content_type = get_nested_value(metadata, "content", "type") or metadata.get("content_type")
+    if content_type:
+        custom_tags.append(f'<meta name="content-type-category" content="{content_type}">')
 
-    if "difficulty" in metadata:
-        custom_tags.append(f'<meta name="difficulty" content="{metadata["difficulty"]}">')
+    # Difficulty: prefer content.difficulty, fallback to difficulty
+    difficulty = get_nested_value(metadata, "content", "difficulty") or metadata.get("difficulty")
+    if difficulty:
+        custom_tags.append(f'<meta name="difficulty" content="{difficulty}">')
 
-    if "modality" in metadata:
-        custom_tags.append(f'<meta name="modality" content="{metadata["modality"]}">')
+    # Modality: prefer facets.modality, fallback to modality
+    modality = get_nested_value(metadata, "facets", "modality") or metadata.get("modality")
+    if modality:
+        custom_tags.append(f'<meta name="modality" content="{modality}">')
+
+    # Topics (v2) or categories (legacy)
+    topics = metadata.get("topics") or metadata.get("categories")
+    if topics:
+        if isinstance(topics, list):
+            topics_str = ", ".join(topics)
+        else:
+            topics_str = topics
+        custom_tags.append(f'<meta name="topics" content="{topics_str}">')
 
     # Add product information from cascade
     custom_tags.extend(_add_product_tags(metadata))
@@ -259,7 +405,7 @@ def build_json_ld(metadata: dict[str, Any], context: dict[str, Any]) -> str | No
     Build JSON-LD structured data for SEO.
 
     Args:
-        metadata: Frontmatter metadata dictionary
+        metadata: Frontmatter metadata dictionary (normalized)
         context: Sphinx HTML context
 
     Returns:
@@ -271,55 +417,57 @@ def build_json_ld(metadata: dict[str, Any], context: dict[str, Any]) -> str | No
         "@type": "TechArticle",
     }
 
-    # Add title
-    if "title" in context:
-        structured_data["headline"] = context["title"]
-        structured_data["name"] = context["title"]
+    # Add title: prefer title.page from metadata, fallback to context
+    page_title = get_nested_value(metadata, "title", "page") or context.get("title")
+    if page_title:
+        structured_data["headline"] = page_title
+        structured_data["name"] = page_title
 
     # Add description
     if "description" in metadata:
         structured_data["description"] = metadata["description"]
 
-    # Add keywords
+    # Add keywords from tags
     if "tags" in metadata and isinstance(metadata["tags"], list):
         structured_data["keywords"] = metadata["tags"]
 
-    # Add content type mapping
-    if "content_type" in metadata:
-        content_type = metadata["content_type"]
+    # Add content type mapping: prefer content.type, fallback to content_type
+    content_type = get_nested_value(metadata, "content", "type") or metadata.get("content_type")
+    if content_type:
+        # Normalize to lowercase for mapping
+        content_type_lower = content_type.lower()
         type_mapping = {
             "tutorial": "HowTo",
             "troubleshooting": "HowTo",
             "concept": "Article",
             "reference": "TechArticle",
             "example": "HowTo",
+            "get started": "HowTo",
+            "code sample": "HowTo",
         }
-        if content_type in type_mapping:
-            structured_data["@type"] = type_mapping[content_type]
+        if content_type_lower in type_mapping:
+            structured_data["@type"] = type_mapping[content_type_lower]
 
-    # Add difficulty as proficiency level
-    if "difficulty" in metadata:
+    # Add difficulty as proficiency level: prefer content.difficulty, fallback to difficulty
+    difficulty = get_nested_value(metadata, "content", "difficulty") or metadata.get("difficulty")
+    if difficulty:
+        # Normalize to lowercase for mapping
+        difficulty_lower = difficulty.lower()
         difficulty_map = {
             "beginner": "Beginner",
             "intermediate": "Intermediate",
             "advanced": "Expert",
             "reference": "Expert",
         }
-        if metadata["difficulty"] in difficulty_map:
-            structured_data["proficiencyLevel"] = difficulty_map[metadata["difficulty"]]
+        if difficulty_lower in difficulty_map:
+            structured_data["proficiencyLevel"] = difficulty_map[difficulty_lower]
 
-    # Add audience
-    if "personas" in metadata and isinstance(metadata["personas"], list):
-        audience_map = {
-            "data-scientist-focused": "Data Scientists",
-            "mle-focused": "Machine Learning Engineers",
-            "admin-focused": "System Administrators",
-            "devops-focused": "DevOps Engineers",
-        }
-        audiences = [audience_map.get(p, p) for p in metadata["personas"]]
+    # Add audience: prefer content.audience (already normalized)
+    audience = get_nested_value(metadata, "content", "audience")
+    if audience and isinstance(audience, list):
         structured_data["audience"] = {
             "@type": "Audience",
-            "audienceType": audiences,
+            "audienceType": audience,
         }
 
     # Add URL
@@ -333,7 +481,7 @@ def build_json_ld(metadata: dict[str, Any], context: dict[str, Any]) -> str | No
         "url": "https://www.nvidia.com",
     }
 
-    # Add product information
+    # Add product information from cascade
     if "cascade" in metadata:
         cascade = metadata["cascade"]
         if isinstance(cascade, dict) and "product" in cascade:
@@ -347,6 +495,15 @@ def build_json_ld(metadata: dict[str, Any], context: dict[str, Any]) -> str | No
                 }
                 if product.get("version"):
                     structured_data["about"]["softwareVersion"] = product["version"]
+
+    # Add modality as additional property: prefer facets.modality, fallback to modality
+    modality = get_nested_value(metadata, "facets", "modality") or metadata.get("modality")
+    if modality:
+        structured_data["additionalProperty"] = {
+            "@type": "PropertyValue",
+            "name": "modality",
+            "value": modality,
+        }
 
     # Generate JSON-LD script tag
     json_str = json.dumps(structured_data, indent=2)
@@ -374,10 +531,13 @@ def add_metadata_to_context(
 
     # Extract frontmatter metadata from source file
     env = app.builder.env
-    metadata = extract_frontmatter(env, pagename)
+    raw_metadata = extract_frontmatter(env, pagename)
 
-    if not metadata:
+    if not raw_metadata:
         return
+
+    # Normalize metadata to v2 schema (handles both legacy and new format)
+    metadata = normalize_metadata(raw_metadata)
 
     # Build enhanced page title
     enhanced_title = build_page_title(metadata, context, pagename)

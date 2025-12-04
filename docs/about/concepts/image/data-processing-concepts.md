@@ -1,11 +1,13 @@
 ---
 description: "Core concepts for processing image data including embedding generation, filtering, and deduplication"
-categories: ["concepts-architecture"]
-tags: ["data-processing", "embedding", "filtering", "deduplication", "gpu-accelerated", "pipeline"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "image-only"
+topics: [concepts-architecture]
+tags: [data-processing, embedding, filtering, deduplication, gpu-accelerated, pipeline]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (about-concepts-image-data-processing)=

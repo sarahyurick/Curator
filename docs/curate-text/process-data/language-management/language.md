@@ -1,11 +1,13 @@
 ---
 description: "Identify document languages accurately using FastText models supporting 176 languages for multilingual text processing"
-categories: ["how-to-guides"]
-tags: ["language-identification", "fasttext", "multilingual", "176-languages", "detection", "classification"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [language-identification, fasttext, multilingual, 176-languages, detection, classification]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 # Language Identification

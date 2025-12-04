@@ -1,11 +1,13 @@
 ---
 description: "Concepts for integrating audio processing with text curation workflows in multimodal applications"
-categories: ["concepts-architecture"]
-tags: ["text-integration", "multimodal", "workflow-integration", "format-conversion", "cross-modal"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "audio-text"
+topics: [concepts-architecture]
+tags: [text-integration, multimodal, workflow-integration, format-conversion, cross-modal]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-text
 ---
 
 (about-concepts-audio-text-integration)=

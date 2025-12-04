@@ -1,11 +1,13 @@
 ---
 description: "Process image data using embeddings, filters, and filtering for high-quality dataset curation"
-categories: ["workflows"]
-tags: ["data-processing", "embedding", "filtering", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "image-only"
+topics: [workflows]
+tags: [data-processing, embedding, filtering, gpu-accelerated]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-process-data)=

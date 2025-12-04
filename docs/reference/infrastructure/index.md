@@ -1,11 +1,13 @@
 ---
 description: "Technical reference for NeMo Curator's infrastructure components including distributed computing, memory management, and GPU acceleration"
-categories: ["reference"]
-tags: ["infrastructure", "distributed", "gpu-accelerated", "memory-management", "docker", "performance"]
-personas: ["admin-focused", "mle-focused", "devops-focused"]
-difficulty: "reference"
-content_type: "reference"
-modality: "universal"
+topics: [reference]
+tags: [infrastructure, distributed, gpu-accelerated, memory-management, docker, performance]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Cluster Administrator, Machine Learning Engineer, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 # Infrastructure References

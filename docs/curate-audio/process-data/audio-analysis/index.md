@@ -1,12 +1,15 @@
 ---
 description: "Extract and analyze audio file characteristics including duration calculation, format validation, and metadata extraction"
-categories: ["audio-processing"]
-tags: ["audio-analysis", "duration-calculation", "format-validation", "metadata-extraction", "file-validation"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "workflow"
-modality: "audio-only"
+topics: [audio-processing]
+tags: [audio-analysis, duration-calculation, format-validation, metadata-extraction, file-validation]
+content:
+  type: Workflow
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
+
 (audio-process-data-audio-analysis)=
 
 # Audio Analysis

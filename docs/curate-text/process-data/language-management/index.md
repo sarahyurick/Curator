@@ -1,11 +1,13 @@
 ---
 description: "Handle multilingual content and language-specific processing including language identification and stop word management"
-categories: ["workflows"]
-tags: ["language-management", "multilingual", "fasttext", "stop-words", "language-detection"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "text-only"
+topics: [workflows]
+tags: [language-management, multilingual, fasttext, stop-words, language-detection]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-languages)=

@@ -1,11 +1,13 @@
 ---
-description: "Concepts for constructing manifests and ingesting audio datasets in NeMo Curator"
-categories: ["concepts-architecture"]
-tags: ["manifests", "ingest", "datasets", "audio"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "audio-only"
+description: Concepts for constructing manifests and ingesting audio datasets in NeMo Curator
+topics: [concepts-architecture]
+tags: [manifests, ingest, datasets, audio]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (about-concepts-audio-manifests-ingest)=

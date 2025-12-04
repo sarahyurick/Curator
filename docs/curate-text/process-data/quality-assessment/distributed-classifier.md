@@ -1,11 +1,13 @@
 ---
 description: "Perform distributed data classification using GPU-accelerated models for domain, quality, safety, and content assessment"
-categories: ["how-to-guides"]
-tags: ["distributed-classification", "gpu", "domain", "quality", "safety", "crossfit", "scalable"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [distributed-classification, gpu, domain, quality, safety, crossfit, scalable]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-filter-dist-classifier)=

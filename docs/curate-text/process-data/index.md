@@ -1,11 +1,13 @@
 ---
 description: "Process text data using comprehensive filtering, deduplication, content processing, and specialized tools for high-quality datasets"
-categories: ["workflows"]
-tags: ["data-processing", "filtering", "deduplication", "content-processing", "quality-assessment", "distributed"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "text-only"
+topics: [AI, Text Processing]
+tags: [data-processing, filtering, deduplication, content-processing, quality-assessment]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 # Process Data for Text Curation

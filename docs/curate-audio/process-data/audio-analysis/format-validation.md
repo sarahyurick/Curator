@@ -1,11 +1,13 @@
 ---
-description: "Audio format support and error handling in NeMo Curator audio processing stages"
-categories: ["processors"]
-tags: ["audio-validation", "format-support", "error-handling", "soundfile"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "reference"
-modality: "audio-only"
+description: Audio format support and error handling in NeMo Curator audio processing stages
+topics: [processors]
+tags: [audio-validation, format-support, error-handling, soundfile]
+content:
+  type: Reference
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-analysis-format-validation)=

@@ -1,11 +1,13 @@
 ---
 description: "Overview of NVIDIA AI ecosystem tools that integrate with NeMo Curator for end-to-end model development workflows"
-categories: ["integrations-apis"]
-tags: ["nemo-framework", "model-training", "tokenization", "alignment", "deployment", "enterprise"]
-personas: ["mle-focused", "data-scientist-focused", "admin-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "universal"
+topics: [integrations-apis]
+tags: [nemo-framework, model-training, tokenization, alignment, deployment, enterprise]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Machine Learning Engineer, Data Scientist, Cluster Administrator]
+facets:
+  modality: universal
 ---
 
 (reference-tools)=

@@ -1,12 +1,13 @@
 ---
 description: "Integration options for NeMo Curator with external systems and frameworks for enhanced data processing capabilities"
-categories: ["workflows"]
-tags: ["integrations", "external-systems", "frameworks", "data-processing"]
-personas: ["admin-focused", "devops-focused", "data-scientist-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "universal"
-orphan: true
+topics: [workflows]
+tags: [integrations, external-systems, frameworks, data-processing]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Cluster Administrator, DevOps Professional, Data Scientist]
+facets:
+  modality: universal
 ---
 
 (admin-integrations)=

@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive administration guide for NeMo Curator deployment, infrastructure management, monitoring, and scaling from development to production"
-categories: ["getting-started"]
-tags: ["admin", "deployment", "infrastructure", "installation", "configuration"]
-personas: ["admin-focused", "devops-focused", "data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "overview"
-modality: "universal"
+topics: [getting-started]
+tags: [admin, deployment, infrastructure, installation, configuration]
+content:
+  type: Overview
+  difficulty: Beginner
+  audience: [Cluster Administrator, DevOps Professional, Data Scientist, Machine Learning Engineer]
+facets:
+  modality: universal
 ---
 
 (admin-overview)=

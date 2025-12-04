@@ -1,11 +1,13 @@
 ---
 description: "Save metadata, export filtered datasets, and configure output sharding for downstream use after image curation"
-categories: ["how-to-guides"]
-tags: ["data-export", "parquet", "tar-files", "filtering", "sharding", "metadata"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "image-only"
+topics: [how-to-guides]
+tags: [data-export, parquet, tar-files, filtering, sharding, metadata]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-save-export)=

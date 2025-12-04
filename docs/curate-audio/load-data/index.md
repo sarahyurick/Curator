@@ -1,11 +1,13 @@
 ---
 description: "Load audio datasets from various sources including FLEURS, custom manifests, and local files"
-categories: ["workflows"]
-tags: ["data-loading", "audio-manifests", "fleurs", "local-files", "batch-processing"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "workflow"
-modality: "audio-only"
+topics: [workflows]
+tags: [data-loading, audio-manifests, fleurs, local-files, batch-processing]
+content:
+  type: Workflow
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 # Load Audio Data

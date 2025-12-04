@@ -1,11 +1,13 @@
 ---
 description: "Essential concepts for video data curation including distributed processing, pipeline stages, and execution modes"
-categories: ["concepts-architecture"]
-tags: ["concepts", "video-curation", "distributed", "pipeline", "ray", "autoscaling"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "video-only"
+topics: [concepts-architecture]
+tags: [concepts, video-curation, distributed, pipeline, ray, autoscaling]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (about-concepts-video)=

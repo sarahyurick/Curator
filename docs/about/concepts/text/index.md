@@ -1,11 +1,13 @@
 ---
-description: "Essential concepts for text data curation including loading and processing."
-categories: ["concepts-architecture"]
-tags: ["concepts", "text-curation", "data-processing", "distributed"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "text-only"
+description: Essential concepts for text data curation including loading and processing.
+topics: [AI, Text Processing]
+tags: [concepts, text-curation, data-processing, distributed]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (about-concepts-text)=

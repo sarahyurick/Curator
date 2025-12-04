@@ -1,11 +1,13 @@
 ---
 description: "Key abstractions in video curation including stages, pipelines, and execution modes for scalable processing"
-categories: ["concepts-architecture"]
-tags: ["abstractions", "pipeline", "stages", "video-curation", "distributed", "ray"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "video-only"
+topics: [concepts-architecture]
+tags: [abstractions, pipeline, stages, video-curation, distributed, ray]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 only: not ga
 ---
 

@@ -1,12 +1,13 @@
 ---
 description: "End-to-end workflow tutorial covering the video curation process from splitting through semantic deduplication (Ray/Python)"
-categories: ["video-curation"]
-tags: ["workflow", "pipeline", "video-splitting", "deduplication", "semantic", "ray"]
-personas: ["mle-focused", "data-scientist-focused"]
-difficulty: "intermediate"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [workflow, pipeline, video-splitting, deduplication, semantic, ray]
+content:
+  type: Tutorial
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Data Scientist]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-split-dedup)=

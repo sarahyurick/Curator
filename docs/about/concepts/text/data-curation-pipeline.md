@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive overview of NeMo Curator's text curation pipeline architecture including data acquisition and processing"
-categories: ["concepts-architecture"]
-tags: ["pipeline", "architecture", "text-curation", "distributed", "gpu-accelerated", "overview"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "text-only"
+topics: [concepts-architecture]
+tags: [pipeline, architecture, text-curation, distributed, gpu-accelerated, overview]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (about-concepts-text-data-curation-pipeline)=

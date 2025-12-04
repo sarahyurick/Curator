@@ -1,11 +1,13 @@
 ---
 description: "Load and process JPEG images from tar archives using DALI-powered GPU acceleration with distributed processing"
-categories: ["how-to-guides"]
-tags: ["tar-archives", "data-loading", "dali", "gpu-acceleration", "distributed"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "image-only"
+topics: [how-to-guides]
+tags: [tar-archives, data-loading, dali, gpu-acceleration, distributed]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-load-data-tar-archives)=

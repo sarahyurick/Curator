@@ -1,13 +1,14 @@
 ---
 description: "Export processed audio data and transcriptions in formats optimized for ASR training and multimodal applications"
-categories: ["data-export"]
-tags: ["output-formats", "manifests", "jsonl", "metadata", "asr-training"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-only"
+topics: [data-export]
+tags: [output-formats, manifests, jsonl, metadata, asr-training]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
-
 
 (audio-save-export)=
 

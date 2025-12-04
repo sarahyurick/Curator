@@ -1,11 +1,13 @@
 ---
 description: "Hands-on tutorials for text curation workflows including quality assessment with NeMo Curator"
-categories: ["tutorials"]
-tags: ["tutorials", "text-curation", "hands-on", "examples"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "text-only"
+topics: [tutorials]
+tags: [tutorials, text-curation, hands-on, examples]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-tutorials)=

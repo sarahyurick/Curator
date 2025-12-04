@@ -1,11 +1,13 @@
 ---
 description: "Frequently asked questions about migrating NeMo Curator workflows from Dask to Ray"
-categories: ["migration", "release-notes"]
-tags: ["migration", "dask", "ray", "faq", "troubleshooting"]
-personas: ["data-scientist-focused", "mle-focused", "devops-focused"]
-difficulty: "beginner"
-content_type: "faq"
-modality: "universal"
+topics: [migration, release-notes]
+tags: [migration, dask, ray, faq, troubleshooting]
+content:
+  type: Faq
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (migration-faq)=

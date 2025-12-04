@@ -1,11 +1,13 @@
 ---
 description: "Assess and filter audio quality using transcription accuracy metrics, duration analysis, and custom quality measures"
-categories: ["audio-processing"]
-tags: ["quality-assessment", "wer-filtering", "duration-filtering", "quality-metrics", "speech-quality"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "audio-only"
+topics: [audio-processing]
+tags: [quality-assessment, wer-filtering, duration-filtering, quality-metrics, speech-quality]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-process-data-quality-assessment)=

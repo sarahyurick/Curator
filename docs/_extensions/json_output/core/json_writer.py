@@ -33,9 +33,11 @@ class JSONWriter:
 
             json_path.parent.mkdir(parents=True, exist_ok=True)
 
+            # Special handling for main index.json: output as array of documents
+            if docname == "index" and "children" in data:
+                self._write_index_array(json_path, data)
             # Handle separate content files option
-            separate_content = get_setting(self.config, "separate_content", False)
-            if separate_content and "content" in data:
+            elif get_setting(self.config, "separate_content", False) and "content" in data:
                 self._write_separate_content(json_path, data)
             else:
                 self._write_single_file(json_path, data)
@@ -66,11 +68,20 @@ class JSONWriter:
 
         self._write_json_data(json_path, main_data)
 
+    def _write_index_array(self, json_path: Path, data: dict[str, Any]) -> None:
+        """Write main index.json as array of page objects (optimized for search engines)."""
+        # Extract children array - this is the array of page objects
+        children = data.get("children", [])
+        
+        # Write as array directly (not wrapped in object)
+        self._write_json_data(json_path, children)
+        logger.info(f"Wrote index.json as array with {len(children)} documents")
+
     def _write_single_file(self, json_path: Path, data: dict[str, Any]) -> None:
         """Write all data to a single JSON file."""
         self._write_json_data(json_path, data)
 
-    def _write_json_data(self, file_path: Path, data: dict[str, Any]) -> None:
+    def _write_json_data(self, file_path: Path, data: dict[str, Any] | list[Any]) -> None:
         """Write JSON data to file with appropriate formatting."""
         with open(file_path, "w", encoding="utf-8") as f:
             if get_setting(self.config, "minify_json", False):

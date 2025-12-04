@@ -1,11 +1,13 @@
 ---
 description: "Load video data into NeMo Curator from local paths or fsspec-supported storage, including explicit file list support"
-categories: ["video-curation"]
-tags: ["video", "load", "s3", "local", "file-list"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "howto"
-modality: "video-only"
+topics: [video-curation]
+tags: [video, load, s3, local, file-list]
+content:
+  type: Howto
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-load-data)=

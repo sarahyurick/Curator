@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive overview of the automatic speech recognition pipeline architecture and workflow in NeMo Curator"
-categories: ["concepts-architecture"]
-tags: ["asr-pipeline", "speech-recognition", "architecture", "workflow", "nemo-toolkit"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "audio-only"
+topics: [concepts-architecture]
+tags: [asr-pipeline, speech-recognition, architecture, workflow, nemo-toolkit]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (about-concepts-audio-asr-pipeline)=

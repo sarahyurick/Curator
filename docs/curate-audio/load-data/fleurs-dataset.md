@@ -1,11 +1,13 @@
 ---
 description: "Load and process the multilingual FLEURS speech dataset with automated download and manifest creation"
-categories: ["data-loading"]
-tags: ["fleurs", "multilingual", "speech-corpus", "automated-download", "huggingface"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-only"
+topics: [data-loading]
+tags: [fleurs, multilingual, speech-corpus, automated-download, huggingface]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-load-data-fleurs)=

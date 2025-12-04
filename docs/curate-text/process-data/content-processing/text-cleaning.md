@@ -1,11 +1,13 @@
 ---
 description: "Remove undesirable text including improperly decoded Unicode characters, inconsistent spacing, and excessive URLs"
-categories: ["how-to-guides"]
-tags: ["text-cleaning", "unicode", "normalization", "url-removal", "preprocessing", "ftfy"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [text-cleaning, unicode, normalization, url-removal, preprocessing, ftfy]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-format-text-cleaning)=

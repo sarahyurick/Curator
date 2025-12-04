@@ -1,11 +1,13 @@
 ---
 description: "Core concepts for saving and exporting curated image datasets including metadata, filtering, and resharding"
-categories: ["concepts-architecture"]
-tags: ["data-export", "tar-files", "parquet", "filtering", "resharding", "metadata"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "image-only"
+topics: [concepts-architecture]
+tags: [data-export, tar-files, parquet, filtering, resharding, metadata]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (about-concepts-image-data-export)=

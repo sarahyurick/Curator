@@ -1,11 +1,13 @@
 ---
 description: "Filter audio samples based on Word Error Rate thresholds to ensure high-quality transcription accuracy"
-categories: ["audio-processing"]
-tags: ["wer-filtering", "quality-filtering", "transcription-accuracy", "threshold-based", "speech-quality"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-only"
+topics: [audio-processing]
+tags: [wer-filtering, quality-filtering, transcription-accuracy, threshold-based, speech-quality]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 # WER Filtering

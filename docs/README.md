@@ -1,7 +1,3 @@
----
-orphan: true
----
-
 # Documentation Development
 
 - [Documentation Development](#documentation-development)

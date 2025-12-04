@@ -1,11 +1,13 @@
 ---
 description: "Text processing workflows including quality filtering, fuzzy deduplication, content cleaning, and pipeline design"
-categories: ["concepts-architecture"]
-tags: ["data-processing", "quality-filtering", "deduplication", "pipeline", "distributed"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "text-only"
+topics: [concepts-architecture]
+tags: [data-processing, quality-filtering, deduplication, pipeline, distributed]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (about-concepts-text-data-processing)=

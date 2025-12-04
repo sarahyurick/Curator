@@ -1,11 +1,13 @@
 ---
 description: "Step-by-step guide to setting up and running your first text curation pipeline with NeMo Curator"
-categories: ["getting-started"]
-tags: ["text-curation", "installation", "quickstart", "data-loading", "quality-filtering", "python-api"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "text-only"
+topics: [getting-started]
+tags: [text-curation, installation, quickstart, data-loading, quality-filtering, python-api]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (gs-text)=

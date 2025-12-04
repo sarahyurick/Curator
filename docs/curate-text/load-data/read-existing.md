@@ -1,11 +1,13 @@
 ---
 description: "Read existing JSONL and Parquet datasets using Curator's reader stages."
-categories: ["how-to-guides"]
-tags: ["jsonl", "parquet", "data-loading", "reader", "pipelines"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [jsonl, parquet, data-loading, reader, pipelines]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-load-data-read-existing)=

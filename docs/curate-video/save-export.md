@@ -1,11 +1,13 @@
 ---
 description: "Understand output directories, parquet embeddings, and packaging curated video data for training"
-categories: ["video-curation"]
-tags: ["export", "parquet", "webdataset", "metadata"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "howto"
-modality: "video-only"
+topics: [video-curation]
+tags: [export, parquet, webdataset, metadata]
+content:
+  type: Howto
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-save-export)=

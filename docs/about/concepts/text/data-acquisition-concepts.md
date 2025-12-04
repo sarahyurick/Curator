@@ -1,11 +1,13 @@
 ---
 description: "Core concepts for acquiring text data from remote sources including DocumentDownloader, DocumentIterator, and DocumentExtractor components"
-categories: ["concepts-architecture"]
-tags: ["data-acquisition", "remote-sources", "download", "extract", "distributed"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "concept"
-modality: "text-only"
+topics: [concepts-architecture]
+tags: [data-acquisition, remote-sources, download, extract, distributed]
+content:
+  type: Concept
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (about-concepts-text-data-acquisition)=

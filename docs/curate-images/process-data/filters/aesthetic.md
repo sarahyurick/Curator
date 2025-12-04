@@ -1,11 +1,13 @@
 ---
 description: "Aesthetic filter for predicting visual quality of images using CLIP embeddings and human preference training"
-categories: ["how-to-guides"]
-tags: ["aesthetic", "filtering", "clip", "quality-filtering", "mlp"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "image-only"
+topics: [how-to-guides]
+tags: [aesthetic, filtering, clip, quality-filtering, mlp]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-process-data-filters-aesthetic)=

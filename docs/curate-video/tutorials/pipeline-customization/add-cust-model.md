@@ -1,12 +1,13 @@
 ---
 description: "Tutorial for integrating custom models into video curation pipelines for specialized captioning, embedding, or filtering tasks"
-categories: ["video-curation"]
-tags: ["customization", "models", "machine-learning", "pipeline", "captioning", "embedding", "advanced"]
-personas: ["mle-focused", "data-scientist-focused"]
-difficulty: "advanced"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [customization, models, machine-learning, pipeline, captioning, embedding, advanced]
+content:
+  type: Tutorial
+  difficulty: Advanced
+  audience: [Machine Learning Engineer, Data Scientist]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-pipeline-cust-add-model)=

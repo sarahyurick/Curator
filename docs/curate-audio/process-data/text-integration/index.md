@@ -1,11 +1,13 @@
 ---
-description: "Convert processed audio data to DocumentBatch format for downstream processing"
-categories: ["audio-processing"]
-tags: ["format-conversion", "audio-to-text", "documentbatch"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-text"
+description: Convert processed audio data to DocumentBatch format for downstream processing
+topics: [audio-processing]
+tags: [format-conversion, audio-to-text, documentbatch]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-text
 ---
 
 (audio-process-data-text-integration)=

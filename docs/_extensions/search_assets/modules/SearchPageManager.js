@@ -11,19 +11,20 @@ class SearchPageManager {
         this.documents = [];
         this.currentQuery = '';
         this.allResults = [];
+        // v2 schema filter names with legacy support
         this.currentFilters = {
-            category: '',
+            topic: '',      // was category
             tag: '',
             type: '',
-            persona: '',
+            audience: '',   // was persona
             difficulty: '',
             modality: ''
         };
         this.filterOptions = {
-            categories: [],
+            topics: [],         // was categories
             tags: [],
-            documentTypes: [],
-            personas: [],
+            contentTypes: [],   // was documentTypes
+            audiences: [],      // was personas
             difficulties: [],
             modalities: []
         };
@@ -103,20 +104,23 @@ class SearchPageManager {
     }
     
     renderFilterInterface() {
-        const categoryOptions = this.filterOptions.categories.map(cat => 
-            `<option value="${cat}">${this.formatCategoryName(cat)}</option>`
+        // v2 schema: topics (was categories)
+        const topicOptions = this.filterOptions.topics.map(topic => 
+            `<option value="${topic}">${this.formatTopicName(topic)}</option>`
         ).join('');
         
         const tagOptions = this.filterOptions.tags.map(tag => 
             `<option value="${tag}">${tag}</option>`
         ).join('');
         
-        const typeOptions = this.filterOptions.documentTypes.map(type => 
+        // v2 schema: contentTypes (was documentTypes)
+        const typeOptions = this.filterOptions.contentTypes.map(type => 
             `<option value="${type}">${this.formatTypeName(type)}</option>`
         ).join('');
         
-        const personaOptions = this.filterOptions.personas.map(persona => 
-            `<option value="${persona}">${this.formatPersonaName(persona)}</option>`
+        // v2 schema: audiences (was personas)
+        const audienceOptions = this.filterOptions.audiences.map(audience => 
+            `<option value="${audience}">${this.formatAudienceName(audience)}</option>`
         ).join('');
         
         const difficultyOptions = this.filterOptions.difficulties.map(difficulty => 
@@ -130,9 +134,9 @@ class SearchPageManager {
         return `
             <div class="filter-row">
                 <div class="filter-group">
-                    <select id="category-filter" class="filter-select">
-                        <option value="">All Categories</option>
-                        ${categoryOptions}
+                    <select id="topic-filter" class="filter-select">
+                        <option value="">All Topics</option>
+                        ${topicOptions}
                     </select>
                 </div>
                 
@@ -159,8 +163,8 @@ class SearchPageManager {
         `;
     }
     
-    formatCategoryName(category) {
-        return category
+    formatTopicName(topic) {
+        return topic
             .split(/[-_]/)
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
@@ -173,10 +177,10 @@ class SearchPageManager {
             .join(' ');
     }
     
-    formatPersonaName(persona) {
-        // Convert "data-scientist-focused" to "Data Scientist Focused"
-        return persona
-            .replace(/-focused$/, '') // Remove "-focused" suffix
+    formatAudienceName(audience) {
+        // Convert "data-scientist-focused" or "Data Scientist" format
+        return audience
+            .replace(/-focused$/, '') // Remove "-focused" suffix if legacy
             .split(/[-_]/)
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
@@ -194,9 +198,9 @@ class SearchPageManager {
     }
     
     bindFilterEvents() {
-        // Category filter
-        document.getElementById('category-filter').addEventListener('change', (e) => {
-            this.currentFilters.category = e.target.value;
+        // Topic filter (v2, was category)
+        document.getElementById('topic-filter').addEventListener('change', (e) => {
+            this.currentFilters.topic = e.target.value;
             this.applyFiltersAndSearch();
         });
         
@@ -220,16 +224,16 @@ class SearchPageManager {
     
     clearFilters() {
         this.currentFilters = { 
-            category: '', 
+            topic: '',      // v2, was category
             tag: '', 
             type: '',
-            persona: '',
+            audience: '',   // v2, was persona
             difficulty: '',
             modality: ''
         };
         
         // Reset filter selects
-        document.getElementById('category-filter').value = '';
+        document.getElementById('topic-filter').value = '';
         document.getElementById('tag-filter').value = '';
         document.getElementById('type-filter').value = '';
         
@@ -266,8 +270,9 @@ class SearchPageManager {
         
         // Check for active metadata filters (not in dropdowns)
         const activeMetadataFilters = [];
-        if (this.currentFilters.persona) {
-            activeMetadataFilters.push(`👤 ${this.formatPersonaName(this.currentFilters.persona)}`);
+        // v2: audience (was persona)
+        if (this.currentFilters.audience) {
+            activeMetadataFilters.push(`👤 ${this.formatAudienceName(this.currentFilters.audience)}`);
         }
         if (this.currentFilters.difficulty) {
             activeMetadataFilters.push(`${this.getDifficultyIcon(this.currentFilters.difficulty)} ${this.formatDifficultyName(this.currentFilters.difficulty)}`);
@@ -292,7 +297,7 @@ class SearchPageManager {
     }
     
     clearMetadataFilters() {
-        this.currentFilters.persona = '';
+        this.currentFilters.audience = '';  // v2, was persona
         this.currentFilters.difficulty = '';
         this.currentFilters.modality = '';
         this.updateActiveFiltersDisplay();
@@ -396,8 +401,9 @@ class SearchPageManager {
     getActiveFiltersText() {
         const activeFilters = [];
         
-        if (this.currentFilters.category) {
-            activeFilters.push(`Category: ${this.formatCategoryName(this.currentFilters.category)}`);
+        // v2: topic (was category)
+        if (this.currentFilters.topic) {
+            activeFilters.push(`Topic: ${this.formatTopicName(this.currentFilters.topic)}`);
         }
         if (this.currentFilters.tag) {
             activeFilters.push(`Tag: ${this.currentFilters.tag}`);
@@ -405,8 +411,9 @@ class SearchPageManager {
         if (this.currentFilters.type) {
             activeFilters.push(`Type: ${this.formatTypeName(this.currentFilters.type)}`);
         }
-        if (this.currentFilters.persona) {
-            activeFilters.push(`Persona: ${this.formatPersonaName(this.currentFilters.persona)}`);
+        // v2: audience (was persona)
+        if (this.currentFilters.audience) {
+            activeFilters.push(`Audience: ${this.formatAudienceName(this.currentFilters.audience)}`);
         }
         if (this.currentFilters.difficulty) {
             activeFilters.push(`Difficulty: ${this.formatDifficultyName(this.currentFilters.difficulty)}`);
@@ -425,7 +432,7 @@ class SearchPageManager {
         const sectionInfo = this.getSectionInfo(result.id);
         const matchingSections = this.renderMatchingSections(result, this.currentQuery);
         const resultTags = this.renderResultTags(result);
-        const resultCategories = this.renderResultCategories(result);
+        const resultTopics = this.renderResultTopics(result);
         const metadataBadges = this.renderMetadataBadges(result);
         
         // Multiple matches indicator
@@ -475,38 +482,41 @@ class SearchPageManager {
         return `<div class="result-tags mb-2">${tagsHtml}${moreText}</div>`;
     }
     
-    renderResultCategories(result) {
-        const categories = this.searchEngine.getDocumentCategories(result);
-        if (!categories || categories.length === 0) return '';
+    renderResultTopics(result) {
+        const topics = this.searchEngine.getDocumentTopics(result);
+        if (!topics || topics.length === 0) return '';
         
-        const categoriesHtml = categories.slice(0, 2).map(category => 
-            `<span class="result-category badge bg-info">${this.formatCategoryName(category)}</span>`
+        const topicsHtml = topics.slice(0, 2).map(topic => 
+            `<span class="result-topic badge bg-info">${this.formatTopicName(topic)}</span>`
         ).join('');
         
-        return `<div class="result-categories">${categoriesHtml}</div>`;
+        return `<div class="result-topics">${topicsHtml}</div>`;
     }
     
     renderMetadataBadges(result) {
         const badges = [];
         
-        // Persona badge
-        if (result.personas) {
-            const personas = Array.isArray(result.personas) ? result.personas : [result.personas];
-            const firstPersona = personas[0]; // Use first persona for filtering
-            const personaText = personas.map(p => this.formatPersonaName(p)).join(', ');
-            badges.push(`<span class="metadata-badge persona-badge clickable-badge" data-filter-type="persona" data-filter-value="${this.escapeHtml(firstPersona)}" title="Click to filter by ${this.formatPersonaName(firstPersona)}">👤 ${personaText}</span>`);
+        // Audience badge (v2: content.audience, legacy: personas)
+        const audiences = result.content?.audience || result.personas;
+        if (audiences) {
+            const audienceList = Array.isArray(audiences) ? audiences : [audiences];
+            const firstAudience = audienceList[0]; // Use first audience for filtering
+            const audienceText = audienceList.map(a => this.formatAudienceName(a)).join(', ');
+            badges.push(`<span class="metadata-badge audience-badge clickable-badge" data-filter-type="audience" data-filter-value="${this.escapeHtml(firstAudience)}" title="Click to filter by ${this.formatAudienceName(firstAudience)}">👤 ${audienceText}</span>`);
         }
         
-        // Difficulty badge
-        if (result.difficulty) {
-            const difficultyIcon = this.getDifficultyIcon(result.difficulty);
-            badges.push(`<span class="metadata-badge difficulty-badge clickable-badge" data-filter-type="difficulty" data-filter-value="${this.escapeHtml(result.difficulty)}" title="Click to filter by ${this.formatDifficultyName(result.difficulty)}">${difficultyIcon} ${this.formatDifficultyName(result.difficulty)}</span>`);
+        // Difficulty badge (v2: content.difficulty, legacy: difficulty)
+        const difficulty = result.content?.difficulty || result.difficulty;
+        if (difficulty) {
+            const difficultyIcon = this.getDifficultyIcon(difficulty);
+            badges.push(`<span class="metadata-badge difficulty-badge clickable-badge" data-filter-type="difficulty" data-filter-value="${this.escapeHtml(difficulty)}" title="Click to filter by ${this.formatDifficultyName(difficulty)}">${difficultyIcon} ${this.formatDifficultyName(difficulty)}</span>`);
         }
         
-        // Modality badge
-        if (result.modality) {
-            const modalityIcon = this.getModalityIcon(result.modality);
-            badges.push(`<span class="metadata-badge modality-badge clickable-badge" data-filter-type="modality" data-filter-value="${this.escapeHtml(result.modality)}" title="Click to filter by ${this.formatModalityName(result.modality)}">${modalityIcon} ${this.formatModalityName(result.modality)}</span>`);
+        // Modality badge (v2: facets.modality, legacy: modality)
+        const modality = result.facets?.modality || result.modality;
+        if (modality) {
+            const modalityIcon = this.getModalityIcon(modality);
+            badges.push(`<span class="metadata-badge modality-badge clickable-badge" data-filter-type="modality" data-filter-value="${this.escapeHtml(modality)}" title="Click to filter by ${this.formatModalityName(modality)}">${modalityIcon} ${this.formatModalityName(modality)}</span>`);
         }
         
         return badges.join('');
@@ -687,7 +697,7 @@ class SearchPageManager {
     }
     
     showNoResults() {
-        const filtersActive = this.currentFilters.category || this.currentFilters.tag || this.currentFilters.type;
+        const filtersActive = this.currentFilters.topic || this.currentFilters.tag || this.currentFilters.type;
         const suggestionText = filtersActive 
             ? 'Try clearing some filters or using different keywords'
             : 'Try different keywords or check your spelling';

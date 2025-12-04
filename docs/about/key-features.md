@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive overview of NeMo Curator's key features for text, image, video, and audio data curation with deployment options"
-categories: ["concepts-architecture"]
-tags: ["features", "benchmarks", "deduplication", "classification", "gpu-accelerated", "distributed", "deployment-operations"]
-personas: ["data-scientist-focused", "mle-focused", "admin-focused", "devops-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "universal"
+topics: [concepts-architecture]
+tags: [features, benchmarks, deduplication, classification, gpu-accelerated, distributed, deployment-operations]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer, Cluster Administrator, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (about-key-features)=

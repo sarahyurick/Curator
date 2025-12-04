@@ -1,11 +1,13 @@
 ---
-description: "Create custom data loading pipelines using Curator."
-categories: ["how-to-guides"]
-tags: ["custom-data", "stages", "pipelines", "data-loading"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "advanced"
-content_type: "how-to"
-modality: "text-only"
+description: Create custom data loading pipelines using Curator.
+topics: [how-to-guides]
+tags: [custom-data, stages, pipelines, data-loading]
+content:
+  type: How-To
+  difficulty: Advanced
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-load-data-custom)=

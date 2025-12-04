@@ -1,11 +1,13 @@
 ---
 description: "Load image data for curation using tar archives with distributed processing and GPU acceleration"
-categories: ["workflows"]
-tags: ["data-loading", "tar-archives", "distributed", "dali", "gpu-accelerated"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "image-only"
+topics: [workflows]
+tags: [data-loading, tar-archives, distributed, dali, gpu-accelerated]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-load-data)=

@@ -1,11 +1,13 @@
 ---
 description: "Perform automatic speech recognition using NeMo Framework models with GPU acceleration and batch processing"
-categories: ["audio-processing"]
-tags: ["asr-inference", "nemo-models", "speech-recognition", "gpu-accelerated", "batch-processing"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "audio-only"
+topics: [audio-processing]
+tags: [asr-inference, nemo-models, speech-recognition, gpu-accelerated, batch-processing]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-process-data-asr-inference)=

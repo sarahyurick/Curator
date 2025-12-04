@@ -1,11 +1,13 @@
 ---
 description: "Core concepts for evaluating speech transcription quality using WER, CER, duration analysis, and speech rate metrics"
-categories: ["concepts-architecture"]
-tags: ["quality-metrics", "wer", "cer", "speech-quality", "transcription-accuracy"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "audio-only"
+topics: [concepts-architecture]
+tags: [quality-metrics, wer, cer, speech-quality, transcription-accuracy]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (about-concepts-audio-quality-metrics)=

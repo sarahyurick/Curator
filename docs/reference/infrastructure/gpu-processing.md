@@ -1,11 +1,13 @@
 ---
 description: "Guide to leveraging NVIDIA GPU acceleration in NeMo Curator for faster data processing and memory optimization"
-categories: ["reference"]
-tags: ["gpu-accelerated", "cuda", "rmm", "performance", "memory-management", "optimization"]
-personas: ["mle-focused", "admin-focused"]
-difficulty: "intermediate"
-content_type: "reference"
-modality: "universal"
+topics: [reference]
+tags: [gpu-accelerated, cuda, rmm, performance, memory-management, optimization]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Machine Learning Engineer, Cluster Administrator]
+facets:
+  modality: universal
 ---
 
 (reference-infra-gpu-processing)=

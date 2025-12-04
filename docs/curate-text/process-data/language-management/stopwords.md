@@ -1,11 +1,13 @@
 ---
 description: "Manage high-frequency words to enhance text extraction and content detection with language-specific stop word lists"
-categories: ["how-to-guides"]
-tags: ["stop-words", "preprocessing", "filtering", "language-specific", "text-extraction", "content-detection"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [stop-words, preprocessing, filtering, language-specific, text-extraction, content-detection]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-languages-stop-words)=

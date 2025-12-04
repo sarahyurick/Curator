@@ -1,11 +1,13 @@
 ---
 description: "Filter text using trained quality classifiers including FastText models and pre-trained language classification"
-categories: ["how-to-guides"]
-tags: ["classifier-filtering", "fasttext", "ml-models", "quality", "training", "scoring"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [classifier-filtering, fasttext, ml-models, quality, training, scoring]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-filter-classifier)=

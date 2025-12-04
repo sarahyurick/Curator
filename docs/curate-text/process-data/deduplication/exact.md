@@ -1,10 +1,13 @@
-description: "Identify and remove exact duplicates using MD5 hashing in a Ray-based workflow"
-categories: ["how-to-guides"]
-tags: ["exact-dedup", "hashing", "md5", "gpu", "ray"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "text-only"
+---
+description: Identify and remove exact duplicates using MD5 hashing in a Ray-based workflow
+topics: [how-to-guides]
+tags: [exact-dedup, hashing, md5, gpu, ray]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-dedup-exact)=

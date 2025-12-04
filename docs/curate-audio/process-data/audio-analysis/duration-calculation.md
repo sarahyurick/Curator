@@ -1,11 +1,13 @@
 ---
 description: "Calculate precise audio duration using soundfile library for quality assessment and metadata generation"
-categories: ["processors"]
-tags: ["audio-analysis", "duration", "soundfile", "metadata", "quality-control"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "how-to"
-modality: "audio-only"
+topics: [processors]
+tags: [audio-analysis, duration, soundfile, metadata, quality-control]
+content:
+  type: How-To
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-analysis-duration-calculation)=

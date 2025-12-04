@@ -1,11 +1,13 @@
 ---
 description: "Clean, normalize, and transform text content to meet specific requirements including text cleaning and normalization"
-categories: ["workflows"]
-tags: ["content-processing", "text-cleaning", "unicode", "normalization"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "text-only"
+topics: [workflows]
+tags: [content-processing, text-cleaning, unicode, normalization]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-format)=

@@ -54,9 +54,26 @@ class DocumentLoader {
     
     /**
      * Process and filter documents from raw data
+     * Supports multiple formats:
+     * - Array format (new): [doc1, doc2, ...]
+     * - Object with children (legacy): {children: [doc1, doc2, ...]}
+     * - Single object (fallback): {id: "...", ...}
      */
     processDocuments(data) {
-        const allDocs = data.children || [data]; // Handle both formats
+        let allDocs;
+        
+        // Check if data is already an array (new format)
+        if (Array.isArray(data)) {
+            allDocs = data;
+        }
+        // Check for nested children format (legacy)
+        else if (data.children && Array.isArray(data.children)) {
+            allDocs = data.children;
+        }
+        // Fallback: wrap single object in array
+        else {
+            allDocs = [data];
+        }
         
         // Filter out problematic documents
         const filteredDocs = allDocs.filter(doc => this.isValidDocument(doc));
@@ -71,33 +88,58 @@ class DocumentLoader {
     
     /**
      * Check if a document is valid for indexing
+     * Supports v2 schema: content can be object (classification) or string (markdown)
      */
     isValidDocument(doc) {
         const docId = doc.id || '';
+        // Check for markdown content: either content (string) or content_text (when content is object)
+        const hasContent = (typeof doc.content === 'string' && doc.content) || 
+                          (typeof doc.content === 'object' && doc.content_text);
         return !docId.toLowerCase().includes('readme') && 
                !docId.startsWith('_') && 
                doc.title && 
-               doc.content;
+               hasContent;
     }
     
     /**
      * Sanitize document content for safe indexing
+     * Supports v2 schema (nested content/facets) and legacy flat fields
      */
     sanitizeDocument(doc) {
-        return {
+        // Check if content is classification object (v2) or markdown string (legacy)
+        const isContentObject = doc.content && typeof doc.content === 'object' && doc.content.type;
+        const markdownContent = isContentObject ? doc.content_text : doc.content;
+        
+        const sanitized = {
             ...doc,
             title: this.sanitizeText(doc.title, 200),
-            content: this.sanitizeText(doc.content, 5000),
             summary: this.sanitizeText(doc.summary, 500),
             headings: this.sanitizeHeadings(doc.headings),
             headings_text: this.sanitizeText(doc.headings_text, 1000),
             keywords: this.sanitizeArray(doc.keywords, 300),
             tags: this.sanitizeArray(doc.tags, 200),
+            // v2: topics, legacy: categories (keep both)
+            topics: this.sanitizeArray(doc.topics, 200),
             categories: this.sanitizeArray(doc.categories, 200),
             doc_type: this.sanitizeText(doc.doc_type, 50),
             section_path: this.sanitizeArray(doc.section_path, 200),
             author: this.sanitizeText(doc.author, 100)
         };
+        
+        // Handle content: preserve classification object if v2, sanitize markdown string if legacy
+        if (isContentObject) {
+            sanitized.content = doc.content;  // Keep nested content classification object
+            sanitized.content_text = this.sanitizeText(markdownContent, 5000);  // Sanitize markdown separately
+        } else {
+            sanitized.content = this.sanitizeText(markdownContent, 5000);  // Legacy: content is markdown
+        }
+        
+        // Preserve v2 facets structure
+        if (doc.facets) {
+            sanitized.facets = doc.facets;
+        }
+        
+        return sanitized;
     }
     
     /**

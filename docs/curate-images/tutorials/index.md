@@ -1,11 +1,13 @@
 ---
 description: "Hands-on tutorials for image curation workflows using NeMo Curator tools and techniques"
-categories: ["tutorials"]
-tags: ["tutorials", "image-curation", "hands-on", "examples"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "image-only"
+topics: [tutorials]
+tags: [tutorials, image-curation, hands-on, examples]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-tutorials)=

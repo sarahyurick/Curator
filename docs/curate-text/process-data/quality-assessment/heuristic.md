@@ -1,11 +1,13 @@
 ---
 description: "Filter text using rule-based metrics to identify and remove low-quality documents with configurable thresholds"
-categories: ["how-to-guides"]
-tags: ["heuristic-filtering", "rules", "metrics", "thresholds", "quality-control", "fast"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "text-only"
+topics: [how-to-guides]
+tags: [heuristic-filtering, rules, metrics, thresholds, quality-control, fast]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-filter-heuristic)=

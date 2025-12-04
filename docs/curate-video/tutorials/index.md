@@ -1,12 +1,13 @@
 ---
 description: "Collection of tutorials for video curation workflows including beginner guides and advanced pipeline customization techniques"
-categories: ["video-curation"]
-tags: ["tutorial", "video-processing", "pipeline", "customization", "workflow", "beginner"]
-personas: ["mle-focused", "data-scientist-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [tutorial, video-processing, pipeline, customization, workflow, beginner]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Machine Learning Engineer, Data Scientist]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials)=

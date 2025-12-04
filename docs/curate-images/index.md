@@ -1,11 +1,13 @@
 ---
 description: "Overview of image data curation with NeMo Curator including loading, processing, filtering, and export workflows"
-categories: ["workflows"]
-tags: ["image-curation", "tar-archives", "filtering", "embedding", "workflows"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "workflow"
-modality: "image-only"
+topics: [workflows]
+tags: [image-curation, tar-archives, filtering, embedding, workflows]
+content:
+  type: Workflow
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (image-overview)=

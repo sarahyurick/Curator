@@ -1,11 +1,13 @@
 ---
 description: "Core concepts and terminology for NeMo Curator across text, image, video, and audio data curation modalities"
-categories: ["concepts-architecture"]
-tags: ["concepts", "fundamentals", "multimodal", "architecture"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "universal"
+topics: [concepts-architecture]
+tags: [concepts, fundamentals, multimodal, architecture]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: universal
 ---
 
 (about-concepts)=

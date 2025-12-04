@@ -1,11 +1,13 @@
 ---
 description: "Guide for migrating NeMo Curator workflows from Dask to Ray-based pipeline architecture"
-categories: ["migration", "release-notes"]
-tags: ["migration", "dask", "ray", "pipeline", "text", "image", "video", "audio"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "guide"
-modality: "universal"
+topics: [migration, release-notes]
+tags: [migration, dask, ray, pipeline, text, image, video, audio]
+content:
+  type: Guide
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: universal
 ---
 
 (migration-guide)=

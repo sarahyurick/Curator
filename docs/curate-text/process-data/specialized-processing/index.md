@@ -1,11 +1,13 @@
 ---
 description: "Domain-specific processing for code and advanced curation tasks with specialized modules"
-categories: ["workflows"]
-tags: ["specialized-processing", "code", "advanced"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "advanced"
-content_type: "workflow"
-modality: "text-only"
+topics: [workflows]
+tags: [specialized-processing, code, advanced]
+content:
+  type: Workflow
+  difficulty: Advanced
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-process-data-specialized)=

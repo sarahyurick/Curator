@@ -1,11 +1,13 @@
 ---
 description: "Comprehensive system, hardware, and software requirements for deploying NeMo Curator in production environments"
-categories: ["reference"]
-tags: ["requirements", "system-requirements", "hardware", "software", "gpu", "storage"]
-personas: ["admin-focused", "devops-focused"]
-difficulty: "reference"
-content_type: "reference"
-modality: "universal"
+topics: [reference]
+tags: [requirements, system-requirements, hardware, software, gpu, storage]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Cluster Administrator, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (admin-deployment-requirements)=

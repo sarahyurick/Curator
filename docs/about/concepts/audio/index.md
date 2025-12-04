@@ -1,11 +1,13 @@
 ---
 description: "Essential concepts for audio data curation including ASR inference, quality assessment, and speech processing workflows"
-categories: ["concepts-architecture"]
-tags: ["concepts", "audio-curation", "asr", "speech-processing", "quality-metrics"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "concept"
-modality: "audio-only"
+topics: [concepts-architecture]
+tags: [concepts, audio-curation, asr, speech-processing, quality-metrics]
+content:
+  type: Concept
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (about-concepts-audio)=

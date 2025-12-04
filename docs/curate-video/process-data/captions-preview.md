@@ -1,11 +1,13 @@
 ---
-description: "Generate clip captions with Qwen and optional preview images"
-categories: ["video-curation"]
-tags: ["captions", "qwen", "preview", "video"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "howto"
-modality: "video-only"
+description: Generate clip captions with Qwen and optional preview images
+topics: [video-curation]
+tags: [captions, qwen, preview, video]
+content:
+  type: Howto
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-process-captions-preview)=

@@ -1,11 +1,13 @@
 ---
 description: "Release notes and version history for NeMo Curator platform updates and new features"
-categories: ["reference"]
-tags: ["release-notes", "changelog", "updates"]
-personas: ["data-scientist-focused", "mle-focused", "admin-focused", "devops-focused"]
-difficulty: "reference"
-content_type: "reference"
-modality: "universal"
+topics: [reference]
+tags: [release-notes, changelog, updates]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer, Cluster Administrator, DevOps Professional]
+facets:
+  modality: universal
 ---
 
 (about-release-notes)=

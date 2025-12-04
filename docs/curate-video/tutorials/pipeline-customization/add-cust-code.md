@@ -1,12 +1,13 @@
 ---
 description: "Tutorial for adding custom code to video curation pipelines for specialized processing requirements"
-categories: ["video-curation"]
-tags: ["customization", "custom-code", "pipeline", "advanced", "development"]
-personas: ["mle-focused"]
-difficulty: "advanced"
-content_type: "tutorial"
-modality: "video-only"
-
+topics: [video-curation]
+tags: [customization, custom-code, pipeline, advanced, development]
+content:
+  type: Tutorial
+  difficulty: Advanced
+  audience: [Machine Learning Engineer]
+facets:
+  modality: video-only
 ---
 
 (video-tutorials-pipeline-cust-add-code)=

@@ -1,11 +1,13 @@
 ---
 description: "Create and load custom audio manifests in JSONL format for NeMo Curator audio processing"
-categories: ["data-loading"]
-tags: ["custom-manifests", "jsonl", "audio-metadata"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "how-to"
-modality: "audio-only"
+topics: [data-loading]
+tags: [custom-manifests, jsonl, audio-metadata]
+content:
+  type: How-To
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: audio-only
 ---
 
 (audio-load-data-custom-manifests)=

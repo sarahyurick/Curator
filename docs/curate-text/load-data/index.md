@@ -1,11 +1,13 @@
 ---
 description: "Load text data from Common Crawl, Wikipedia, and custom datasets using Curator."
-categories: ["workflows"]
-tags: ["data-loading", "arxiv", "common-crawl", "wikipedia", "custom-data", "distributed", "ray"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "intermediate"
-content_type: "workflow"
-modality: "text-only"
+topics: [workflows]
+tags: [data-loading, arxiv, common-crawl, wikipedia, custom-data, distributed, ray]
+content:
+  type: Workflow
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: text-only
 ---
 
 (text-load-data)=

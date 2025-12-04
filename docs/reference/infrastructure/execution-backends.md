@@ -1,11 +1,13 @@
 ---
-description: "Choose and configure execution backends for NeMo Curator pipelines"
-categories: ["reference"]
-tags: ["executors", "xenna", "ray", "ray-data", "actor-pool", "pipelines"]
-personas: ["data-scientist-focused", "mle-focused", "admin-focused"]
-difficulty: "reference"
-content_type: "reference"
-modality: "universal"
+description: Choose and configure execution backends for NeMo Curator pipelines
+topics: [reference]
+tags: [executors, xenna, ray, ray-data, actor-pool, pipelines]
+content:
+  type: Reference
+  difficulty: Intermediate
+  audience: [Data Scientist, Machine Learning Engineer, Cluster Administrator]
+facets:
+  modality: universal
 ---
 
 (reference-execution-backends)=

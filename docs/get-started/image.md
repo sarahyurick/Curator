@@ -1,11 +1,13 @@
 ---
 description: "Step-by-step guide to setting up and running your first image curation pipeline with NeMo Curator"
-categories: ["getting-started"]
-tags: ["image-curation", "installation", "quickstart", "gpu-accelerated", "embedding", "classification", "tar-archives"]
-personas: ["data-scientist-focused", "mle-focused"]
-difficulty: "beginner"
-content_type: "tutorial"
-modality: "image-only"
+topics: [getting-started]
+tags: [image-curation, installation, quickstart, gpu-accelerated, embedding, classification, tar-archives]
+content:
+  type: Tutorial
+  difficulty: Beginner
+  audience: [Data Scientist, Machine Learning Engineer]
+facets:
+  modality: image-only
 ---
 
 (gs-image)=

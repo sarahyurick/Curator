@@ -17,6 +17,132 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def get_nested_value(data: dict[str, Any], *keys: str, default: Any = None) -> Any:
+    """
+    Safely get a nested value from a dictionary.
+
+    Args:
+        data: Dictionary to traverse
+        *keys: Sequence of keys to traverse
+        default: Default value if not found
+
+    Returns:
+        Value at the nested path or default
+    """
+    current = data
+    for key in keys:
+        if isinstance(current, dict) and key in current:
+            current = current[key]
+        else:
+            return default
+    return current
+
+
+def normalize_metadata_for_json(metadata: dict[str, Any]) -> dict[str, Any]:
+    """
+    Normalize metadata from legacy schema to v2 schema for JSON output.
+
+    Supports both legacy flat fields and new nested structure.
+
+    Args:
+        metadata: Raw frontmatter metadata
+
+    Returns:
+        Normalized metadata dict
+    """
+    normalized = {}
+
+    # === Title ===
+    # v2: title.page, title.nav, title.social
+    title_data = metadata.get("title")
+    if isinstance(title_data, dict):
+        normalized["title"] = title_data
+    elif title_data:
+        normalized["title"] = {"page": title_data}
+
+    # === Description ===
+    if metadata.get("description"):
+        normalized["description"] = metadata["description"]
+
+    # === Social metadata ===
+    social_data = metadata.get("social")
+    if isinstance(social_data, dict):
+        normalized["social"] = social_data
+
+    # === Tags ===
+    if metadata.get("tags"):
+        tags = metadata["tags"]
+        normalized["tags"] = tags if isinstance(tags, list) else [tags]
+
+    # === Topics (v2) / Categories (legacy) ===
+    topics = metadata.get("topics") or metadata.get("categories")
+    if topics:
+        normalized["topics"] = topics if isinstance(topics, list) else [topics]
+
+    # === Content classification ===
+    content = {}
+
+    # content.type or content_type
+    content_type = get_nested_value(metadata, "content", "type") or metadata.get("content_type")
+    if content_type:
+        content["type"] = content_type
+
+    # content.difficulty or difficulty
+    difficulty = get_nested_value(metadata, "content", "difficulty") or metadata.get("difficulty")
+    if difficulty:
+        content["difficulty"] = difficulty
+
+    # content.audience or personas
+    audience = get_nested_value(metadata, "content", "audience")
+    if not audience and metadata.get("personas"):
+        # Normalize legacy personas to human-readable audience
+        personas = metadata["personas"]
+        if isinstance(personas, list):
+            audience_map = {
+                "data-scientist-focused": "Data Scientist",
+                "mle-focused": "Machine Learning Engineer",
+                "admin-focused": "Cluster Administrator",
+                "devops-focused": "DevOps Professional",
+            }
+            audience = [audience_map.get(p, p) for p in personas]
+        else:
+            audience = [personas]
+
+    if audience:
+        content["audience"] = audience if isinstance(audience, list) else [audience]
+
+    if content:
+        normalized["content"] = content
+
+    # === Facets (v2) / modality (legacy) ===
+    facets = {}
+    modality = get_nested_value(metadata, "facets", "modality") or metadata.get("modality")
+    if modality:
+        facets["modality"] = modality
+
+    if facets:
+        normalized["facets"] = facets
+
+    # === Dates ===
+    dates = metadata.get("dates")
+    if isinstance(dates, dict):
+        normalized["dates"] = dates
+
+    # === Status ===
+    if metadata.get("status"):
+        normalized["status"] = metadata["status"]
+
+    # === Only (content gating) ===
+    if metadata.get("only"):
+        normalized["only"] = metadata["only"]
+
+    # === Cascade/product info (pass through) ===
+    if metadata.get("cascade"):
+        normalized["cascade"] = metadata["cascade"]
+
+    return normalized
+
+
 class JSONFormatter:
     """Handles JSON data structure building and formatting."""
 
@@ -25,34 +151,143 @@ class JSONFormatter:
         self.env = app.env
         self.config = app.config
         self.json_builder = json_builder
+        
+        # Cache product/book metadata from conf.py
+        self._product_metadata = self._extract_product_metadata()
+    
+    def _extract_product_metadata(self) -> dict[str, Any]:
+        """Extract product and book metadata from Sphinx config."""
+        metadata = {}
+        
+        # Book info from standard Sphinx config
+        if hasattr(self.config, "project"):
+            metadata["book"] = {
+                "title": self.config.project,
+                "version": getattr(self.config, "release", ""),
+            }
+        
+        # Product info - try multiple sources
+        product_name = None
+        product_family = None
+        
+        # Check html_context (common pattern)
+        html_context = getattr(self.config, "html_context", {})
+        if isinstance(html_context, dict):
+            product_name = html_context.get("product_name")
+            product_family = html_context.get("product_family")
+        
+        # Check myst_substitutions (NeMo Curator pattern)
+        myst_subs = getattr(self.config, "myst_substitutions", {})
+        if isinstance(myst_subs, dict):
+            if not product_name:
+                product_name = myst_subs.get("product_name_short") or myst_subs.get("product_name")
+            if not product_family:
+                # Derive from product_name if contains family indicator
+                full_name = myst_subs.get("product_name", "")
+                if "NeMo" in full_name:
+                    product_family = ["NeMo"]
+        
+        # Fallback: extract from project name
+        if not product_name and hasattr(self.config, "project"):
+            project = self.config.project
+            # Extract product name from patterns like "NeMo-Curator" or "NVIDIA NeMo Curator"
+            if "-" in project:
+                product_name = project.split("-")[-1]
+            elif " " in project:
+                parts = project.replace("NVIDIA", "").strip().split()
+                product_name = parts[-1] if parts else project
+            else:
+                product_name = project
+        
+        if product_name:
+            metadata["product"] = {
+                "name": product_name,
+            }
+            if product_family:
+                metadata["product"]["family"] = product_family if isinstance(product_family, list) else [product_family]
+        
+        # Site info
+        site_name = html_context.get("site_name") if isinstance(html_context, dict) else None
+        if site_name:
+            metadata["site"] = {"name": site_name}
+        
+        return metadata
+    
+    def _get_parent_path(self, docname: str) -> list[str]:
+        """Get parent document path(s) as an array."""
+        parents = []
+        
+        if "/" in docname:
+            parts = docname.split("/")
+            # Build parent paths from root to immediate parent
+            for i in range(len(parts) - 1):
+                if i == 0:
+                    parent_path = parts[0] + "/index"
+                else:
+                    parent_path = "/".join(parts[:i+1]) + "/index"
+                
+                # Check if parent exists
+                if parent_path in self.env.all_docs or parts[i] == "index":
+                    parents.append(parent_path if parts[i] != "index" else "/".join(parts[:i]) + "/index")
+            
+            # Also add root index as top-level parent
+            if docname != "index" and "index" in self.env.all_docs:
+                if "index" not in parents:
+                    parents.insert(0, "index")
+        elif docname != "index":
+            # Top-level doc, parent is main index
+            if "index" in self.env.all_docs:
+                parents.append("index")
+        
+        return parents
 
     def add_metadata_fields(self, data: dict[str, Any], metadata: dict[str, Any]) -> None:
-        """Add all metadata fields to JSON data structure."""
-        # Basic metadata fields
-        if metadata.get("description"):
-            data["description"] = metadata["description"]
-        if metadata.get("tags"):
-            data["tags"] = metadata["tags"] if isinstance(metadata["tags"], list) else [metadata["tags"]]
-        if metadata.get("categories"):
-            data["categories"] = (
-                metadata["categories"] if isinstance(metadata["categories"], list) else [metadata["categories"]]
-            )
+        """Add all metadata fields to JSON data structure using v2 schema."""
+        # Normalize metadata to v2 schema
+        normalized = normalize_metadata_for_json(metadata)
+
+        # === Core fields ===
+        if normalized.get("description"):
+            data["description"] = normalized["description"]
+
+        if normalized.get("tags"):
+            data["tags"] = normalized["tags"]
+
+        if normalized.get("topics"):
+            data["topics"] = normalized["topics"]
+
+        # === Content classification (v2 nested structure) ===
+        content = normalized.get("content", {})
+        if content:
+            data["content"] = content
+
+        # === Facets (v2 nested structure) ===
+        facets = normalized.get("facets", {})
+        if facets:
+            data["facets"] = facets
+
+        # === Social metadata ===
+        social = normalized.get("social", {})
+        if social:
+            data["social"] = social
+
+        # === Dates ===
+        dates = normalized.get("dates", {})
+        if dates:
+            data["dates"] = dates
+
+        # === Status ===
+        if normalized.get("status"):
+            data["status"] = normalized["status"]
+
+        # === Content gating ===
+        if normalized.get("only"):
+            data["only"] = normalized["only"]
+
+        # === Legacy field passthrough for backward compatibility ===
+        # Keep these for any consumers that expect flat fields
         if metadata.get("author"):
             data["author"] = metadata["author"]
-
-        # Rich frontmatter taxonomy fields
-        if metadata.get("personas"):
-            data["personas"] = (
-                metadata["personas"] if isinstance(metadata["personas"], list) else [metadata["personas"]]
-            )
-        if metadata.get("difficulty"):
-            data["difficulty"] = metadata["difficulty"]
-        if metadata.get("content_type"):
-            data["content_type"] = metadata["content_type"]
-        if metadata.get("modality"):
-            data["modality"] = metadata["modality"]
-        if metadata.get("only"):
-            data["only"] = metadata["only"]
 
     def build_child_json_data(self, docname: str, include_content: bool | None = None) -> dict[str, Any]:
         """Build optimized JSON data for child documents (LLM/search focused)."""
@@ -72,9 +307,18 @@ class JSONFormatter:
             "title": title,
             "url": get_document_url(self.app, docname),
         }
+        
+        # Add parent references as array
+        parents = self._get_parent_path(docname)
+        if parents:
+            data["parent"] = parents
 
         # Add metadata fields
         self.add_metadata_fields(data, metadata)
+        
+        # Add product/book metadata from conf.py
+        if self._product_metadata:
+            data.update(self._product_metadata)
 
         # Add search-specific fields
         if include_content:
@@ -98,14 +342,30 @@ class JSONFormatter:
             "url": get_document_url(self.app, docname),
             "last_modified": datetime.now(timezone.utc).isoformat(),
         }
+        
+        # Add parent references as array
+        parents = self._get_parent_path(docname)
+        if parents:
+            data["parent"] = parents
 
         # Add metadata fields
         self.add_metadata_fields(data, metadata)
+        
+        # Add product/book metadata from conf.py
+        if self._product_metadata:
+            data.update(self._product_metadata)
 
-        # Add content
+        # Add markdown content (preserve content classification object if it exists)
         if content_data.get("content"):
-            data["content"] = content_data["content"]
-            data["format"] = content_data.get("format", "text")
+            # If content is already an object (classification metadata), preserve it and add markdown separately
+            if isinstance(data.get("content"), dict):
+                # Content classification already set, add markdown content as separate field
+                data["content_text"] = content_data["content"]
+                data["format"] = content_data.get("format", "text")
+            else:
+                # No content classification, use content for markdown
+                data["content"] = content_data["content"]
+                data["format"] = content_data.get("format", "text")
 
         if content_data.get("summary"):
             data["summary"] = content_data["summary"]
