@@ -101,100 +101,28 @@ class TestWikipediaUrlGenerator:
         for call in mock_get.call_args_list:
             assert call.kwargs["headers"] == WIKIMEDIA_REQUEST_HEADERS
 
-    @patch("requests.get")
-    def test_get_latest_dump_date_skips_missing_status(self, mock_get: Mock):
-        """A newly-created dump directory may not have dumpstatus.json yet."""
-        mock_html = """
-        <a href="../">../</a>
-        <a href="20230501/">20230501/</a>
-        <a href="20230601/">20230601/</a>
-        <a href="latest/">latest/</a>
-        """
-        completed_dump = {
-            "jobs": {
-                "articlesmultistreamdump": {
-                    "status": "done",
-                    "files": {"enwiki-20230501-pages-articles-multistream1.xml.bz2": {}},
-                }
-            }
-        }
-
-        def mock_get_side_effect(url: str, **kwargs) -> Mock:  # noqa: ARG001
-            response = Mock(status_code=200)
-            if url == "https://dumps.wikimedia.org/enwiki":
-                response.content = mock_html.encode("utf-8")
-            elif url == "https://dumps.wikimedia.org/enwiki/20230601/dumpstatus.json":
-                response.status_code = 404
-                response.content = b"Not found"
-            elif url == "https://dumps.wikimedia.org/enwiki/20230501/dumpstatus.json":
-                response.content = json.dumps(completed_dump).encode("utf-8")
-            else:
-                error_msg = f"Unexpected URL: {url}"
-                raise ValueError(error_msg)
-            return response
-
-        mock_get.side_effect = mock_get_side_effect
-
-        urls = WikipediaUrlGenerator(language="en").generate_urls()
-
-        assert urls == [
-            "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
-        ]
-
-    @pytest.mark.parametrize("transient_status", [408, 429, 500, 503])
-    @patch("requests.get")
-    def test_get_latest_dump_date_skips_transient_status_error(self, mock_get: Mock, transient_status: int):
-        """A transient status error for a candidate does not prevent fallback to an older dump."""
-        mock_html = """
-        <a href="20230501/">20230501/</a>
-        <a href="20230601/">20230601/</a>
-        """
-        completed_dump = {
-            "jobs": {
-                "articlesmultistreamdump": {
-                    "status": "done",
-                    "files": {"enwiki-20230501-pages-articles-multistream1.xml.bz2": {}},
-                }
-            }
-        }
-
-        def mock_get_side_effect(url: str, **kwargs) -> Mock:  # noqa: ARG001
-            response = Mock(status_code=200)
-            if url == "https://dumps.wikimedia.org/enwiki":
-                response.content = mock_html.encode("utf-8")
-            elif url == "https://dumps.wikimedia.org/enwiki/20230601/dumpstatus.json":
-                response.status_code = transient_status
-                response.raise_for_status.side_effect = requests.HTTPError(
-                    f"{transient_status} Server Error", response=response
-                )
-            elif url == "https://dumps.wikimedia.org/enwiki/20230501/dumpstatus.json":
-                response.content = json.dumps(completed_dump).encode("utf-8")
-            else:
-                error_msg = f"Unexpected URL: {url}"
-                raise ValueError(error_msg)
-            return response
-
-        mock_get.side_effect = mock_get_side_effect
-
-        urls = WikipediaUrlGenerator(language="en").generate_urls()
-
-        assert urls == [
-            "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
-        ]
-
     @pytest.mark.parametrize(
-        "transient_error",
-        [requests.Timeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError],
+        "candidate_failure",
+        [
+            pytest.param(404, id="missing-status"),
+            pytest.param(408, id="request-timeout-status"),
+            pytest.param(429, id="rate-limited"),
+            pytest.param(500, id="server-error"),
+            pytest.param(503, id="service-unavailable"),
+            pytest.param(requests.Timeout, id="request-timeout"),
+            pytest.param(requests.ConnectionError, id="connection-error"),
+            pytest.param(requests.exceptions.ChunkedEncodingError, id="truncated-response"),
+            pytest.param(b"not JSON", id="invalid-json"),
+            pytest.param(b"\xff", id="invalid-utf8"),
+        ],
     )
     @patch("requests.get")
-    def test_get_latest_dump_date_skips_transient_request_error(
-        self, mock_get: Mock, transient_error: type[requests.RequestException]
+    def test_get_latest_dump_date_falls_back_from_unavailable_candidate(
+        self,
+        mock_get: Mock,
+        candidate_failure: int | bytes | type[requests.RequestException],
     ):
-        """A transient request error for a candidate does not prevent fallback to an older dump."""
-        mock_html = """
-        <a href="20230501/">20230501/</a>
-        <a href="20230601/">20230601/</a>
-        """
+        """An unavailable newest candidate falls back to an older completed dump."""
         completed_dump = {
             "jobs": {
                 "articlesmultistreamdump": {
@@ -207,16 +135,25 @@ class TestWikipediaUrlGenerator:
         def mock_get_side_effect(url: str, **kwargs) -> Mock:  # noqa: ARG001
             response = Mock(status_code=200)
             if url == "https://dumps.wikimedia.org/enwiki":
-                response.content = mock_html.encode("utf-8")
-                return response
-            if url == "https://dumps.wikimedia.org/enwiki/20230601/dumpstatus.json":
-                msg = "Temporary request failure"
-                raise transient_error(msg)
-            if url == "https://dumps.wikimedia.org/enwiki/20230501/dumpstatus.json":
+                response.content = b'<a href="20230501/">20230501/</a><a href="20230601/">20230601/</a>'
+            elif url.endswith("20230601/dumpstatus.json"):
+                if isinstance(candidate_failure, type):
+                    error_msg = "Temporary request failure"
+                    raise candidate_failure(error_msg)
+                if isinstance(candidate_failure, int):
+                    response.status_code = candidate_failure
+                    if candidate_failure != requests.codes.not_found:
+                        response.raise_for_status.side_effect = requests.HTTPError(
+                            f"HTTP {candidate_failure}", response=response
+                        )
+                else:
+                    response.content = candidate_failure
+            elif url.endswith("20230501/dumpstatus.json"):
                 response.content = json.dumps(completed_dump).encode("utf-8")
-                return response
-            error_msg = f"Unexpected URL: {url}"
-            raise ValueError(error_msg)
+            else:
+                error_msg = f"Unexpected URL: {url}"
+                raise ValueError(error_msg)
+            return response
 
         mock_get.side_effect = mock_get_side_effect
 

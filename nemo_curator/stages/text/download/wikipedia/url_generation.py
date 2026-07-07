@@ -60,7 +60,7 @@ class WikipediaUrlGenerator(URLGenerator):
         raw_dump_data.raise_for_status()
         try:
             dump_data = json.loads(raw_dump_data.content)
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
             logger.warning(f"Unable to load dump data for {wiki_latest_dump_status}: {e}")
             return None
         return dump_data
