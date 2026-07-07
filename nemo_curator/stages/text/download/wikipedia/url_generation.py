@@ -65,7 +65,7 @@ class WikipediaUrlGenerator(URLGenerator):
             return None
         return dump_data
 
-    def _get_wikipedia_urls(self) -> list[str]:
+    def _get_wikipedia_urls(self) -> list[str]:  # noqa: C901
         """
         Retrieves all URLs pointing to Wikipedia dumps for the specified language and date.
 
@@ -102,7 +102,7 @@ class WikipediaUrlGenerator(URLGenerator):
                 except requests.HTTPError as e:
                     status_code = e.response.status_code if e.response is not None else None
                     if status_code is not None and (
-                        status_code == requests.codes.too_many_requests
+                        status_code in (requests.codes.request_timeout, requests.codes.too_many_requests)
                         or status_code >= requests.codes.internal_server_error
                     ):
                         logger.warning(

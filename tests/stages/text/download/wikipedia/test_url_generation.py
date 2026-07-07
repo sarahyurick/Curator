@@ -138,11 +138,10 @@ class TestWikipediaUrlGenerator:
         urls = WikipediaUrlGenerator(language="en").generate_urls()
 
         assert urls == [
-            "https://dumps.wikimedia.org/enwiki/20230501/"
-            "enwiki-20230501-pages-articles-multistream1.xml.bz2"
+            "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
         ]
 
-    @pytest.mark.parametrize("transient_status", [429, 500, 503])
+    @pytest.mark.parametrize("transient_status", [408, 429, 500, 503])
     @patch("requests.get")
     def test_get_latest_dump_date_skips_transient_status_error(self, mock_get: Mock, transient_status: int):
         """A transient status error for a candidate does not prevent fallback to an older dump."""
@@ -180,8 +179,7 @@ class TestWikipediaUrlGenerator:
         urls = WikipediaUrlGenerator(language="en").generate_urls()
 
         assert urls == [
-            "https://dumps.wikimedia.org/enwiki/20230501/"
-            "enwiki-20230501-pages-articles-multistream1.xml.bz2"
+            "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
         ]
 
     @patch("requests.get")
