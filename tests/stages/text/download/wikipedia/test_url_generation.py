@@ -182,7 +182,10 @@ class TestWikipediaUrlGenerator:
             "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
         ]
 
-    @pytest.mark.parametrize("transient_error", [requests.Timeout, requests.ConnectionError])
+    @pytest.mark.parametrize(
+        "transient_error",
+        [requests.Timeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError],
+    )
     @patch("requests.get")
     def test_get_latest_dump_date_skips_transient_request_error(
         self, mock_get: Mock, transient_error: type[requests.RequestException]

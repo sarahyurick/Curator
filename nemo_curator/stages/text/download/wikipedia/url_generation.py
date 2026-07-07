@@ -99,12 +99,6 @@ class WikipediaUrlGenerator(URLGenerator):
                 candidate_dump_date = f"{candidate_date}/"
                 try:
                     candidate_dump_data = self._get_data_for_dump(candidate_dump_date, wiki_index_url)
-                except (requests.Timeout, requests.ConnectionError) as e:
-                    logger.warning(
-                        f"Unable to load dump data for {candidate_date} due to {type(e).__name__}: {e}; "
-                        "trying next dump"
-                    )
-                    continue
                 except requests.HTTPError as e:
                     status_code = e.response.status_code if e.response is not None else None
                     if status_code is not None and (
@@ -117,6 +111,12 @@ class WikipediaUrlGenerator(URLGenerator):
                         )
                         continue
                     raise
+                except requests.RequestException as e:
+                    logger.warning(
+                        f"Unable to load dump data for {candidate_date} due to {type(e).__name__}: {e}; "
+                        "trying next dump"
+                    )
+                    continue
                 if candidate_dump_data is None:
                     logger.warning(f"Cannot load dump data for {candidate_date}")
                     continue
