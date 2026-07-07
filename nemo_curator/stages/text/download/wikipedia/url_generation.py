@@ -97,7 +97,20 @@ class WikipediaUrlGenerator(URLGenerator):
             dump_data = None
             for candidate_date in sorted(dump_dates, reverse=True):
                 candidate_dump_date = f"{candidate_date}/"
-                candidate_dump_data = self._get_data_for_dump(candidate_dump_date, wiki_index_url)
+                try:
+                    candidate_dump_data = self._get_data_for_dump(candidate_dump_date, wiki_index_url)
+                except requests.HTTPError as e:
+                    status_code = e.response.status_code if e.response is not None else None
+                    if status_code is not None and (
+                        status_code == requests.codes.too_many_requests
+                        or status_code >= requests.codes.internal_server_error
+                    ):
+                        logger.warning(
+                            f"Unable to load dump data for {candidate_date} due to HTTP {status_code}; "
+                            "trying next dump"
+                        )
+                        continue
+                    raise
                 if candidate_dump_data is None:
                     logger.warning(f"Cannot load dump data for {candidate_date}")
                     continue

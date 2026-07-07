@@ -142,6 +142,48 @@ class TestWikipediaUrlGenerator:
             "enwiki-20230501-pages-articles-multistream1.xml.bz2"
         ]
 
+    @pytest.mark.parametrize("transient_status", [429, 500, 503])
+    @patch("requests.get")
+    def test_get_latest_dump_date_skips_transient_status_error(self, mock_get: Mock, transient_status: int):
+        """A transient status error for a candidate does not prevent fallback to an older dump."""
+        mock_html = """
+        <a href="20230501/">20230501/</a>
+        <a href="20230601/">20230601/</a>
+        """
+        completed_dump = {
+            "jobs": {
+                "articlesmultistreamdump": {
+                    "status": "done",
+                    "files": {"enwiki-20230501-pages-articles-multistream1.xml.bz2": {}},
+                }
+            }
+        }
+
+        def mock_get_side_effect(url: str, **kwargs) -> Mock:  # noqa: ARG001
+            response = Mock(status_code=200)
+            if url == "https://dumps.wikimedia.org/enwiki":
+                response.content = mock_html.encode("utf-8")
+            elif url == "https://dumps.wikimedia.org/enwiki/20230601/dumpstatus.json":
+                response.status_code = transient_status
+                response.raise_for_status.side_effect = requests.HTTPError(
+                    f"{transient_status} Server Error", response=response
+                )
+            elif url == "https://dumps.wikimedia.org/enwiki/20230501/dumpstatus.json":
+                response.content = json.dumps(completed_dump).encode("utf-8")
+            else:
+                error_msg = f"Unexpected URL: {url}"
+                raise ValueError(error_msg)
+            return response
+
+        mock_get.side_effect = mock_get_side_effect
+
+        urls = WikipediaUrlGenerator(language="en").generate_urls()
+
+        assert urls == [
+            "https://dumps.wikimedia.org/enwiki/20230501/"
+            "enwiki-20230501-pages-articles-multistream1.xml.bz2"
+        ]
+
     @patch("requests.get")
     def test_get_latest_dump_date_http_error(self, mock_get: Mock):
         """HTTP errors from the dump index are surfaced instead of parsed as HTML."""
