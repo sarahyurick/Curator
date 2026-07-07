@@ -92,7 +92,7 @@ class WikipediaUrlGenerator(URLGenerator):
             dump_dates = {
                 link.text.strip("/")
                 for link in wiki_index_parsed.find_all("a")
-                if len(link.text.strip("/")) == 8 and link.text.strip("/").isdigit()
+                if len(link.text.strip("/")) == 8 and link.text.strip("/").isdigit()  # noqa: PLR2004
             }
             dump_data = None
             for candidate_date in sorted(dump_dates, reverse=True):
