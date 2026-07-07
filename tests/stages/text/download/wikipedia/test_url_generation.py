@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import pytest
 import requests
 from bs4 import BeautifulSoup
 
+from nemo_curator.stages.text.download.wikipedia.constants import WIKIMEDIA_REQUEST_HEADERS
 from nemo_curator.stages.text.download.wikipedia.url_generation import WikipediaUrlGenerator
 
 
@@ -97,6 +98,69 @@ class TestWikipediaUrlGenerator:
             "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream2.xml.bz2",
         ]
         assert sorted(urls) == sorted(expected_urls)
+        for call in mock_get.call_args_list:
+            assert call.kwargs["headers"] == WIKIMEDIA_REQUEST_HEADERS
+
+    @patch("requests.get")
+    def test_get_latest_dump_date_skips_missing_status(self, mock_get: Mock):
+        """A newly-created dump directory may not have dumpstatus.json yet."""
+        mock_html = """
+        <a href="../">../</a>
+        <a href="20230501/">20230501/</a>
+        <a href="20230601/">20230601/</a>
+        <a href="latest/">latest/</a>
+        """
+        completed_dump = {
+            "jobs": {
+                "articlesmultistreamdump": {
+                    "status": "done",
+                    "files": {"enwiki-20230501-pages-articles-multistream1.xml.bz2": {}},
+                }
+            }
+        }
+
+        def mock_get_side_effect(url: str, **kwargs) -> Mock:  # noqa: ARG001
+            response = Mock(status_code=200)
+            if url == "https://dumps.wikimedia.org/enwiki":
+                response.content = mock_html.encode("utf-8")
+            elif url == "https://dumps.wikimedia.org/enwiki/20230601/dumpstatus.json":
+                response.status_code = 404
+                response.content = b"Not found"
+            elif url == "https://dumps.wikimedia.org/enwiki/20230501/dumpstatus.json":
+                response.content = json.dumps(completed_dump).encode("utf-8")
+            else:
+                error_msg = f"Unexpected URL: {url}"
+                raise ValueError(error_msg)
+            return response
+
+        mock_get.side_effect = mock_get_side_effect
+
+        urls = WikipediaUrlGenerator(language="en").generate_urls()
+
+        assert urls == [
+            "https://dumps.wikimedia.org/enwiki/20230501/"
+            "enwiki-20230501-pages-articles-multistream1.xml.bz2"
+        ]
+
+    @patch("requests.get")
+    def test_get_latest_dump_date_http_error(self, mock_get: Mock):
+        """HTTP errors from the dump index are surfaced instead of parsed as HTML."""
+        mock_response = Mock()
+        mock_response.raise_for_status.side_effect = requests.HTTPError("403 Client Error")
+        mock_get.return_value = mock_response
+
+        with pytest.raises(requests.HTTPError, match="403 Client Error"):
+            WikipediaUrlGenerator(language="en").generate_urls()
+
+    @patch("requests.get")
+    def test_get_latest_dump_date_no_completed_dump(self, mock_get: Mock):
+        """A clear error is raised when the index has no completed dumps."""
+        mock_response = Mock(status_code=200)
+        mock_response.content = b'<a href="latest/">latest/</a>'
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ValueError, match="Unable to find a completed Wikipedia dump"):
+            WikipediaUrlGenerator(language="en").generate_urls()
 
     @patch("requests.get")
     def test_get_wikipedia_urls_with_specified_date(self, mock_get: Mock):
@@ -368,4 +432,8 @@ class TestWikipediaUrlGeneratorIntegration:
             "https://dumps.wikimedia.org/eswiki/20230301/eswiki-20230301-pages-articles-multistream2.xml.bz2",
         ]
         assert sorted(urls) == sorted(expected_urls)
-        mock_get.assert_called_once_with("https://dumps.wikimedia.org/eswiki/20230301/dumpstatus.json", timeout=30)
+        mock_get.assert_called_once_with(
+            "https://dumps.wikimedia.org/eswiki/20230301/dumpstatus.json",
+            headers=WIKIMEDIA_REQUEST_HEADERS,
+            timeout=30,
+        )
