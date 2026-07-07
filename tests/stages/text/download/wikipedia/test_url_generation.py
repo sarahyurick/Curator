@@ -182,6 +182,47 @@ class TestWikipediaUrlGenerator:
             "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
         ]
 
+    @pytest.mark.parametrize("transient_error", [requests.Timeout, requests.ConnectionError])
+    @patch("requests.get")
+    def test_get_latest_dump_date_skips_transient_request_error(
+        self, mock_get: Mock, transient_error: type[requests.RequestException]
+    ):
+        """A transient request error for a candidate does not prevent fallback to an older dump."""
+        mock_html = """
+        <a href="20230501/">20230501/</a>
+        <a href="20230601/">20230601/</a>
+        """
+        completed_dump = {
+            "jobs": {
+                "articlesmultistreamdump": {
+                    "status": "done",
+                    "files": {"enwiki-20230501-pages-articles-multistream1.xml.bz2": {}},
+                }
+            }
+        }
+
+        def mock_get_side_effect(url: str, **kwargs) -> Mock:  # noqa: ARG001
+            response = Mock(status_code=200)
+            if url == "https://dumps.wikimedia.org/enwiki":
+                response.content = mock_html.encode("utf-8")
+                return response
+            if url == "https://dumps.wikimedia.org/enwiki/20230601/dumpstatus.json":
+                msg = "Temporary request failure"
+                raise transient_error(msg)
+            if url == "https://dumps.wikimedia.org/enwiki/20230501/dumpstatus.json":
+                response.content = json.dumps(completed_dump).encode("utf-8")
+                return response
+            error_msg = f"Unexpected URL: {url}"
+            raise ValueError(error_msg)
+
+        mock_get.side_effect = mock_get_side_effect
+
+        urls = WikipediaUrlGenerator(language="en").generate_urls()
+
+        assert urls == [
+            "https://dumps.wikimedia.org/enwiki/20230501/enwiki-20230501-pages-articles-multistream1.xml.bz2"
+        ]
+
     @patch("requests.get")
     def test_get_latest_dump_date_http_error(self, mock_get: Mock):
         """HTTP errors from the dump index are surfaced instead of parsed as HTML."""
