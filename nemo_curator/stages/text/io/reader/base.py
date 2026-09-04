@@ -17,10 +17,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-import numpy as np
 import pandas as pd
 import pyarrow as pa
-import ray
 from loguru import logger
 
 if TYPE_CHECKING:
@@ -54,6 +52,11 @@ class BaseReader(ProcessingStage[ReaderTask, DocumentBatch]):
     _assign_ids: bool = False
     # Permit valid zero-row results.
     allow_empty: bool = False
+    # Lazily loaded IdManifest cache; the manifest location comes from task
+    # metadata (stamped by FilePartitioningStage), not fixed stage config, so
+    # it can't be loaded in setup().
+    _manifest: Any = field(default=None, init=False, repr=False, compare=False)
+    _manifest_dir_loaded: str | None = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if self._generate_ids and self._assign_ids:
@@ -72,17 +75,10 @@ class BaseReader(ProcessingStage[ReaderTask, DocumentBatch]):
         return ["data"], output_fields
 
     def setup(self, _: WorkerMetadata | None = None) -> None:
-        if self._generate_ids or self._assign_ids:
-            from nemo_curator.stages.deduplication.id_generator import get_id_generator_actor
-
-            try:
-                self.id_generator = get_id_generator_actor()
-            except ValueError:
-                msg = (
-                    "ID generator is required when self._generate_ids or self._assign_ids is True, "
-                    "and the actor 'id_generator' does not exist. Please start the id_generator actor."
-                )
-                raise RuntimeError(msg) from None
+        # No actor to start: ID ranges are precomputed in an IdManifest and
+        # loaded lazily per-task (see _get_manifest), since the manifest
+        # location comes from task metadata, not fixed stage config.
+        pass
 
     def process(self, task: ReaderTask) -> DocumentBatch:
         output = self.read_task(task, dict(self.read_kwargs or {}), self.fields)
@@ -98,11 +94,27 @@ class BaseReader(ProcessingStage[ReaderTask, DocumentBatch]):
         if self._generate_ids or self._assign_ids:
             batch_key = self._id_generator_key(task)
             if self._generate_ids:
-                self._generate_ids_func(batch_key, batch)
+                self._generate_ids_func(batch_key, batch, task)
             else:
-                self._assign_ids_func(batch_key, batch)
+                self._assign_ids_func(batch_key, batch, task)
 
         return batch
+
+    def _get_manifest(self, task: ReaderTask) -> Any:  # noqa: ANN401
+        from nemo_curator.stages.deduplication.id_manifest import ID_MANIFEST_DIR_METADATA_KEY, IdManifest
+
+        manifest_dir = (task._metadata or {}).get(ID_MANIFEST_DIR_METADATA_KEY)
+        if manifest_dir is None:
+            msg = (
+                f"Task metadata is missing {ID_MANIFEST_DIR_METADATA_KEY!r}, required when "
+                "_generate_ids or _assign_ids is True. It is normally stamped by FilePartitioningStage."
+            )
+            raise RuntimeError(msg)
+        if self._manifest is None or self._manifest_dir_loaded != manifest_dir:
+            storage_options = (self.read_kwargs or {}).get("storage_options")
+            self._manifest = IdManifest.from_disk(manifest_dir, storage_options=storage_options)
+            self._manifest_dir_loaded = manifest_dir
+        return self._manifest
 
     def _validate_result(self, task: ReaderTask, result: ReaderData) -> None:
         if self.allow_empty:
@@ -125,41 +137,47 @@ class BaseReader(ProcessingStage[ReaderTask, DocumentBatch]):
         raise NotImplementedError
 
     # ID helpers ----------------------------------------------------------------
+    #
+    # Manifest ranges are precomputed (assigned once, up front, when the
+    # manifest was built) rather than allocated on first use, so "assign"
+    # and "generate" are now the same lookup -- there's no longer a
+    # meaningful distinction between "already registered elsewhere" and
+    # "register now". Both flags are kept for config-surface compatibility.
     @staticmethod
     def _id_generator_key(task: ReaderTask) -> str | list[str]:
         # TODO(NMCUR-315): Use the deterministic task ID for FileGroupTask as well.
-        # Keep returning file paths for backward compatibility until existing ID registries are migrated.
+        # Keep returning file paths for backward compatibility -- IdManifest is keyed
+        # by file path, so only FileGroupTask (real paths) is supported for now.
         if isinstance(task, FileGroupTask):
             return task.data
         return task.get_deterministic_id()
 
     @staticmethod
-    def _append_ids(batch: DocumentBatch, start_id: int, count: int) -> None:
+    def _append_ids(batch: DocumentBatch, ids: Any) -> None:  # noqa: ANN401
         from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR
 
-        ids = np.arange(start_id, start_id + count)
         if isinstance(batch.data, pd.DataFrame):
             batch.data[CURATOR_DEDUP_ID_STR] = ids
         else:
             batch.data = batch.data.append_column(CURATOR_DEDUP_ID_STR, pa.array(ids, type=pa.int64()))
 
-    def _assign_ids_func(self, batch_key: str | list[str], batch: DocumentBatch) -> None:
+    def _assign_ids_func(self, batch_key: str | list[str], batch: DocumentBatch, task: ReaderTask) -> None:
         from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR
+        from nemo_curator.stages.deduplication.id_manifest import assign_ids_for_batch
 
-        if CURATOR_DEDUP_ID_STR not in batch.get_columns():
-            min_id, max_id = ray.get(self.id_generator.get_batch_range.remote(batch_key, None))
-            self._append_ids(batch, min_id, max_id - min_id + 1)
-        else:
+        if CURATOR_DEDUP_ID_STR in batch.get_columns():
             logger.warning(f"Column {CURATOR_DEDUP_ID_STR} already exists in {batch_key}, not re-assigning IDs")
+            return
 
-    def _generate_ids_func(self, batch_key: str | list[str], batch: DocumentBatch) -> None:
-        from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR
+        # Only loaded once we know a manifest is actually needed -- a batch that
+        # already carries CURATOR_DEDUP_ID_STR (handled above) shouldn't require
+        # one at all.
+        manifest = self._get_manifest(task)
+        ids = assign_ids_for_batch(manifest, batch_key, batch.num_items)
+        self._append_ids(batch, ids)
 
-        if CURATOR_DEDUP_ID_STR not in batch.get_columns():
-            min_id = ray.get(self.id_generator.register_batch.remote(batch_key, batch.num_items))
-            self._append_ids(batch, min_id, batch.num_items)
-        else:
-            logger.warning(f"Column {CURATOR_DEDUP_ID_STR} already exists in {batch_key}, not generating new IDs")
+    def _generate_ids_func(self, batch_key: str | list[str], batch: DocumentBatch, task: ReaderTask) -> None:
+        self._assign_ids_func(batch_key, batch, task)
 
     def ray_stage_spec(self) -> dict[str, Any]:
         return {RayStageSpecKeys.IS_ACTOR_STAGE: self._generate_ids or self._assign_ids}

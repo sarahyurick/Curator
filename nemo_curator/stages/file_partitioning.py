@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
@@ -26,6 +27,15 @@ from nemo_curator.utils.file_utils import (
     infer_dataset_name_from_path,
     parse_bytes_string_to_int,
 )
+
+if TYPE_CHECKING:
+    from nemo_curator.stages.deduplication.id_manifest import IdManifest, ManifestFileEntry
+
+# Mirrors nemo_curator.stages.deduplication.id_manifest.ID_MANIFEST_DIR_METADATA_KEY.
+# Kept as a plain constant (rather than importing that module, which pulls in the
+# optional `lance` dependency) so this widely-used stage stays importable without
+# the `[lance]` extra when build_id_manifest is never used.
+_ID_MANIFEST_DIR_METADATA_KEY = "id_manifest_dir"
 
 
 @dataclass
@@ -54,6 +64,26 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
         Storage options to pass to the file system.
     limit: int | None = None
         Maximum number of partitions to create.
+    build_id_manifest: bool = False
+        Whether this stage should build an ``IdManifest`` over the discovered
+        files and use it to drive dedup-id assignment for downstream readers
+        with ``_generate_ids``/``_assign_ids``. Off by default: most
+        ``FilePartitioningStage`` users (video/audio readers, intermediate
+        cache listings, etc.) don't assign dedup ids and shouldn't pay
+        manifest-build cost or be constrained to jsonl/parquet row counting.
+        Readers that do need dedup ids (``JsonlReader``/``ParquetReader``
+        with ``_generate_ids`` or ``_assign_ids``) set this automatically.
+        Slurm-array sharding of the emitted ``FileGroupTask``s (if a Slurm
+        array is active) is unaffected either way -- it's handled generically
+        by the executor, hashing each task's deterministic ``task_id``, the
+        same as for every other source stage; this stage has no Slurm-specific
+        logic of its own.
+    id_manifest_dir: str | None = None
+        Directory for the ``IdManifest``, when ``build_id_manifest=True``.
+        Required when ``file_paths`` is a list (no single directory to derive
+        a default from); defaults to
+        ``<file_paths>/.nemo_curator_id_manifest`` when ``file_paths`` is a
+        single directory path.
     """
 
     file_paths: str | list[str]
@@ -62,6 +92,8 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
     file_extensions: list[str] | None = None
     storage_options: dict[str, Any] | None = None
     limit: int | None = None
+    build_id_manifest: bool = False
+    id_manifest_dir: str | None = None
     name: str = "file_partitioning"
 
     def __post_init__(self):
@@ -73,6 +105,14 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
             self.file_extensions = [".jsonl", ".json", ".parquet"]
         if self.storage_options is None:
             self.storage_options = {}
+        if self.build_id_manifest and self.id_manifest_dir is None:
+            if not isinstance(self.file_paths, str):
+                msg = (
+                    "id_manifest_dir must be provided explicitly when file_paths is a list "
+                    "(there is no single directory to derive a default location from)"
+                )
+                raise ValueError(msg)
+            self.id_manifest_dir = self.file_paths.rstrip("/") + "/.nemo_curator_id_manifest"
 
         # self.blocksize is the value set by the user
         # self._blocksize is the value used internally
@@ -105,12 +145,14 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
         This stage expects a simple Task with file paths information
         and outputs multiple FileGroupTasks for parallel processing.
         """
-        sort_by_size = self.blocksize is not None
-        files_with_sizes = self._get_file_list_with_sizes(sort_by_size)
-        # Extract list[str] from list[tuple[str, int]]
-        files = [file[0] for file in files_with_sizes]
+        if self.build_id_manifest:
+            files, files_with_sizes = self._list_files_via_manifest()
+        else:
+            sort_by_size = self.blocksize is not None
+            files_with_sizes = self._get_file_list_with_sizes(sort_by_size)
+            files = [file[0] for file in files_with_sizes]
+            logger.info(f"Found {len(files)} files")
 
-        logger.info(f"Found {len(files)} files")
         if len(files) == 0:
             logger.warning(f"No files found under {self.file_paths}")
             return []
@@ -160,6 +202,7 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
         # Create FileGroupTask for each partition
         tasks = []
         dataset_name = self._get_dataset_name(files)
+        metadata_extra = {_ID_MANIFEST_DIR_METADATA_KEY: self.id_manifest_dir} if self.build_id_manifest else {}
 
         for i, file_group in enumerate(partitions):
             if self.limit is not None and len(tasks) >= self.limit:
@@ -174,6 +217,7 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
                     "partition_index": i,
                     "total_partitions": len(partitions),
                     "source_files": file_group,  # Add source files for deterministic naming during write stage
+                    **metadata_extra,
                 },
                 reader_config={},  # Empty - will be populated by reader stage
             )
@@ -181,6 +225,92 @@ class FilePartitioningStage(ProcessingStage[EmptyTask, FileGroupTask]):
 
         logger.info(f"Created {len(tasks)} file groups from {len(files)} files")
         return tasks
+
+    def _list_files_via_manifest(self) -> tuple[list[str], list[tuple[str, int]]]:
+        """Discover files and build/load the IdManifest over all of them.
+
+        Listing order doesn't affect partition quality (``_partition_by_size``
+        re-sorts by size internally); files are ordered by the manifest's
+        canonical (path-sorted) ``file_idx`` order instead. Slurm-array
+        sharding of the resulting FileGroupTasks (if any) happens generically
+        in the executor, same as for every other source stage -- this stage
+        has no Slurm-specific logic of its own.
+        """
+        discovered_files = [path for path, _ in self._get_file_list_with_sizes(sort_by_size=False)]
+        logger.info(f"Found {len(discovered_files)} files")
+        if len(discovered_files) == 0:
+            return [], []
+
+        manifest = self._get_or_build_manifest(discovered_files)
+        entries: list[ManifestFileEntry] = manifest.list_entries()
+
+        files = [entry.path for entry in entries]
+        files_with_sizes = [(entry.path, entry.file_size) for entry in entries]
+        return files, files_with_sizes
+
+    def _get_or_build_manifest(self, discovered_files: list[str]) -> "IdManifest":
+        """Load the manifest if it already covers every discovered file, else build it.
+
+        Concurrent callers pointed at the same ``id_manifest_dir`` (e.g. many
+        Slurm array tasks launched around the same time, before any manifest
+        exists yet) must not all try to build it at once: ``IdManifest.build()``
+        fails fast with ``RuntimeError`` on writer-lock contention rather than
+        blocking, so a naive "just call build()" here would crash every task
+        except whichever one happens to win the lock. Instead: try a read-only
+        load first (safe under unlimited concurrency); if that comes up empty
+        or incomplete, try to build; if another process is already building it
+        (lock contention), wait for that build to finish and load its result
+        instead of failing this task.
+        """
+        # Imported lazily: id_manifest.py pulls in the optional `lance` dependency,
+        # and most FilePartitioningStage users never set build_id_manifest=True.
+        from nemo_curator.stages.deduplication.id_manifest import IdManifest
+
+        manifest = self._try_load_complete_manifest(discovered_files)
+        if manifest is not None:
+            return manifest
+
+        try:
+            return IdManifest.build(discovered_files, self.id_manifest_dir, storage_options=self.storage_options)
+        except RuntimeError:
+            logger.info(
+                f"Another process is already building the IdManifest at {self.id_manifest_dir}; "
+                "waiting for it to finish instead of racing it."
+            )
+            return self._wait_for_manifest(discovered_files)
+
+    def _try_load_complete_manifest(self, discovered_files: list[str]) -> "IdManifest | None":
+        from nemo_curator.stages.deduplication.id_manifest import IdManifest
+
+        try:
+            manifest = IdManifest.from_disk(self.id_manifest_dir, storage_options=self.storage_options)
+        except (ValueError, OSError, FileNotFoundError):
+            return None
+        existing_paths = {entry.path for entry in manifest.list_entries()}
+        if set(discovered_files) <= existing_paths:
+            return manifest
+        return None
+
+    def _wait_for_manifest(
+        self,
+        discovered_files: list[str],
+        timeout_seconds: float = 1800.0,
+        poll_interval_seconds: float = 5.0,
+    ) -> "IdManifest":
+        # If the process building it fails outright (not just contention), waiters
+        # here time out rather than surfacing that failure directly -- the build
+        # error itself will be visible in that process's own logs/exit status.
+        deadline = time.monotonic() + timeout_seconds
+        while time.monotonic() < deadline:
+            manifest = self._try_load_complete_manifest(discovered_files)
+            if manifest is not None:
+                return manifest
+            time.sleep(poll_interval_seconds)
+        msg = (
+            f"Timed out after {timeout_seconds}s waiting for a concurrently-building IdManifest "
+            f"at {self.id_manifest_dir} to finish"
+        )
+        raise TimeoutError(msg)
 
     def _get_file_list_with_sizes(self, sort_by_size: bool = True) -> list[tuple[str, int]]:
         """

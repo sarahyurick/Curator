@@ -32,12 +32,7 @@ from loguru import logger
 from nemo_curator.backends.base import BaseExecutor
 from nemo_curator.pipeline import Pipeline
 from nemo_curator.pipeline.workflow import WorkflowRunResult
-from nemo_curator.stages.deduplication.id_generator import (
-    CURATOR_DEDUP_ID_STR,
-    create_id_generator_actor,
-    kill_id_generator_actor,
-    write_id_generator_to_disk,
-)
+from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR
 from nemo_curator.stages.deduplication.semantic.ranking import RankingStrategy
 from nemo_curator.stages.deduplication.semantic.workflow import SemanticDeduplicationWorkflow
 from nemo_curator.stages.text.deduplication.removal_workflow import TextDuplicatesRemovalWorkflow
@@ -98,7 +93,7 @@ class TextSemanticDeduplicationWorkflow:
     _duplicates_num_row_groups_hint: int | None = None
     # ID generator parameters
     use_id_generator: bool = False
-    id_generator_state_file: str | None = None
+    id_manifest_dir: str | None = None
     # I/O parameters
     input_filetype: Literal["jsonl", "parquet"] = "parquet"
     input_file_extensions: list[str] | None = None
@@ -154,8 +149,8 @@ class TextSemanticDeduplicationWorkflow:
         _duplicates_num_row_groups_hint: Hint for number of row groups in duplicates output
 
         # ID generator parameters
-        use_id_generator: Whether to use ID generator for document IDs
-        id_generator_state_file: Path to save/load ID generator state (auto-generated if None)
+        use_id_generator: Whether to assign deterministic document IDs via an IdManifest
+        id_manifest_dir: Directory for the IdManifest (auto-generated under output_path if None)
 
         # I/O parameters
         input_files_per_partition: Number of files per partition for reading
@@ -188,7 +183,7 @@ class TextSemanticDeduplicationWorkflow:
         self.deduplicated_output_path = (
             None if not self.perform_removal else os.path.join(self.output_path, "deduplicated")
         )
-        self.id_generator_state_file = os.path.join(self.output_path, "semantic_id_generator.json")
+        self.id_manifest_dir = os.path.join(self.output_path, "semantic_id_manifest")
 
         self._validate_config()
 
@@ -254,6 +249,7 @@ class TextSemanticDeduplicationWorkflow:
                 ),
                 file_extensions=self.input_file_extensions or get_default_file_extensions(self.input_filetype),
                 _generate_ids=self.use_id_generator,
+                id_manifest_dir=self.id_manifest_dir if self.use_id_generator else None,
                 read_kwargs=self.read_kwargs,
             )
         elif self.input_filetype == "parquet":
@@ -269,6 +265,7 @@ class TextSemanticDeduplicationWorkflow:
                 file_extensions=self.input_file_extensions or get_default_file_extensions(self.input_filetype),
                 read_kwargs=self.read_kwargs,
                 _generate_ids=self.use_id_generator,
+                id_manifest_dir=self.id_manifest_dir if self.use_id_generator else None,
             )
         else:
             msg = f"Input filetype {self.input_filetype} not supported yet"
@@ -368,9 +365,8 @@ class TextSemanticDeduplicationWorkflow:
             # Ids to remove args
             duplicate_id_field="id",
             duplicate_id_read_kwargs=self.write_kwargs,
-            # ID generator parameters
-            id_generator_path=self.id_generator_state_file if self.use_id_generator else None,
-            id_generator_storage_options=self.write_kwargs.get("storage_options"),
+            # ID manifest parameters
+            id_manifest_dir=self.id_manifest_dir if self.use_id_generator else None,
             # Output args
             output_filetype=self.output_filetype,
             output_file_extension=self.output_file_extension,
@@ -412,7 +408,7 @@ class TextSemanticDeduplicationWorkflow:
 
         logger.info(f"Use ID generator: {self.use_id_generator}")
         if self.use_id_generator:
-            logger.info(f"  - ID generator state file: {self.id_generator_state_file}")
+            logger.info(f"  - ID manifest directory: {self.id_manifest_dir}")
 
         logger.info("=" * 80)
 
@@ -462,37 +458,16 @@ class TextSemanticDeduplicationWorkflow:
             if self.verbose:
                 self._log_configuration()
 
-            # Setup ID generator if needed
-            if self.use_id_generator:
-                logger.debug(f"Setting up ID generator, state will be saved to: {self.id_generator_state_file}")
-                try:
-                    create_id_generator_actor()
-                except ValueError as e:
-                    if "already taken" in str(e):
-                        logger.debug("ID generator actor already exists, using existing actor")
-                    else:
-                        raise
-
             # Stage 1: Embedding generation
+            # When use_id_generator is set, the reader stage's FilePartitioningStage
+            # builds the IdManifest (at self.id_manifest_dir) as part of normal setup --
+            # no separate actor lifecycle to manage.
             embedding_start_time = time.time()
             embedding_results = self._run_embedding_generation(embedding_executor)
             embedding_end_time = time.time()
             embedding_time = embedding_end_time - embedding_start_time
             workflow_result.add_pipeline_tasks("embeddings", embedding_results)
             logger.success(f"Embedding generation completed in {embedding_time:.2f} seconds")
-
-            if self.use_id_generator:
-                try:
-                    write_id_generator_to_disk(self.id_generator_state_file)
-                    if self.verbose:
-                        logger.debug(f"ID generator state saved for removal stage to: {self.id_generator_state_file}")
-                except Exception as save_error:
-                    logger.error(f"Error saving ID generator state: {save_error}")
-                    raise
-                finally:
-                    if self.verbose:
-                        logger.debug("Killing ID generator actor...")
-                    kill_id_generator_actor()
 
             # Stage 2: Semantic deduplication
             semantic_start_time = time.time()
@@ -564,7 +539,7 @@ class TextSemanticDeduplicationWorkflow:
                 "embeddings_path": self.embeddings_path,
                 "semantic_dedup_path": self.semantic_dedup_path,
                 "final_output_path": self.deduplicated_output_path if self.perform_removal else None,
-                "id_generator_path": self.id_generator_state_file if self.use_id_generator else None,
+                "id_manifest_dir": self.id_manifest_dir if self.use_id_generator else None,
             }
         )
         return workflow_result

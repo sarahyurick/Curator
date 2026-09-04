@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,16 +26,11 @@ from nemo_curator.stages.deduplication.fuzzy.connected_components import Connect
 from nemo_curator.stages.deduplication.fuzzy.identify_duplicates import IdentifyDuplicatesStage
 from nemo_curator.stages.deduplication.fuzzy.lsh.stage import LSHStage
 from nemo_curator.stages.deduplication.fuzzy.minhash import MinHashStage
-from nemo_curator.stages.deduplication.id_generator import (
-    create_id_generator_actor,
-    kill_id_generator_actor,
-    write_id_generator_to_disk,
-)
 from nemo_curator.stages.file_partitioning import FilePartitioningStage
 from nemo_curator.tasks import FileGroupTask
 from nemo_curator.utils.file_utils import get_default_file_extensions, get_fs
 
-ID_GENERATOR_OUTPUT_FILENAME = "fuzzy_id_generator.json"
+ID_MANIFEST_DIRNAME = "fuzzy_id_manifest"
 
 
 class FuzzyDeduplicationWorkflow(WorkflowBase):
@@ -205,7 +200,7 @@ class FuzzyDeduplicationWorkflow(WorkflowBase):
             msg = "bands_per_iteration must be between [1, num_bands]"
             raise ValueError(msg)
 
-    def _create_minhash_pipeline(self, generate_input_filegroups: bool) -> Pipeline:
+    def _create_minhash_pipeline(self, generate_input_filegroups: bool, id_manifest_dir: str) -> Pipeline:
         stages = []
         if generate_input_filegroups:
             stages.append(
@@ -214,6 +209,8 @@ class FuzzyDeduplicationWorkflow(WorkflowBase):
                     file_extensions=(self.input_file_extensions or get_default_file_extensions(self.input_filetype)),
                     blocksize=self.input_blocksize,
                     storage_options=self.read_kwargs.get("storage_options") if self.read_kwargs is not None else None,
+                    build_id_manifest=True,
+                    id_manifest_dir=id_manifest_dir,
                 ),
             )
         stages.append(
@@ -228,6 +225,7 @@ class FuzzyDeduplicationWorkflow(WorkflowBase):
                 read_format=self.input_filetype,
                 read_kwargs=self.read_kwargs,
                 write_kwargs=self.cache_kwargs,
+                id_manifest_dir=id_manifest_dir,
             ),
         )
         return Pipeline(
@@ -329,73 +327,57 @@ class FuzzyDeduplicationWorkflow(WorkflowBase):
 
         total_start_time = time.time()
 
-        try:
-            create_id_generator_actor()
-        except ValueError:
-            err_msg = """
-            An existing id generator actor was found. Please remove or save the existing id generator with
-            `nemo_curator.stages.deduplication.id_generator.write_id_generator_to_disk` (if needed) and remove the actor with
-            `nemo_curator.stages.deduplication.id_generator.kill_id_generator_actor` before running the fuzzy deduplication pipeline.
-            """
-            raise RuntimeError(err_msg) from None
+        output_fs = get_fs(
+            self.output_path,
+            self.write_kwargs.get("storage_options") if self.write_kwargs is not None else None,
+        )
+        id_manifest_dir = output_fs.sep.join([self.output_path, ID_MANIFEST_DIRNAME])
+        workflow_result.add_metadata("id_manifest_dir", id_manifest_dir)
 
-        id_generator_path = None
-        try:
-            # Step 1: Minhash
-            minhash_pipeline = self._create_minhash_pipeline(generate_input_filegroups=initial_tasks is None)
-            minhash_start_time = time.time()
-            minhash_tasks = minhash_pipeline.run(executor=executor, initial_tasks=initial_tasks)
-            minhash_end_time = time.time()
-            minhash_time = minhash_end_time - minhash_start_time
-            workflow_result.add_pipeline_tasks("minhash", minhash_tasks)
-            workflow_result.add_metadata("minhash_time", minhash_time)
-            logger.info(f"Minhash pipeline completed in {minhash_time:.2f} seconds")
-            output_fs = get_fs(
-                self.output_path,
-                self.write_kwargs.get("storage_options") if self.write_kwargs is not None else None,
+        # Step 1: Minhash
+        minhash_pipeline = self._create_minhash_pipeline(
+            generate_input_filegroups=initial_tasks is None, id_manifest_dir=id_manifest_dir
+        )
+        minhash_start_time = time.time()
+        minhash_tasks = minhash_pipeline.run(executor=executor, initial_tasks=initial_tasks)
+        minhash_end_time = time.time()
+        minhash_time = minhash_end_time - minhash_start_time
+        workflow_result.add_pipeline_tasks("minhash", minhash_tasks)
+        workflow_result.add_metadata("minhash_time", minhash_time)
+        logger.info(f"Minhash pipeline completed in {minhash_time:.2f} seconds")
+
+        # Step 2: LSH
+        lsh_pipeline = self._create_lsh_pipeline()
+        lsh_start_time = time.time()
+        # LSH stage generates it's own input tasks from the minhash directory
+        lsh_tasks = lsh_pipeline.run(executor=executor, initial_tasks=None)
+        lsh_end_time = time.time()
+        lsh_time = lsh_end_time - lsh_start_time
+        workflow_result.add_pipeline_tasks("lsh", lsh_tasks)
+        workflow_result.add_metadata("lsh_time", lsh_time)
+        logger.info(f"LSH pipeline completed in {lsh_time:.2f} seconds")
+
+        valid_lsh_tasks = [task for task in lsh_tasks or [] if task._metadata.get("num_docs", 0) > 0]
+        if len(valid_lsh_tasks) == 0:
+            logger.info("No potential duplicates found in the dataset. Skipping connected components pipeline.")
+            workflow_result.add_metadata("num_duplicates", 0)
+        else:
+            # Step 3: Connected components
+            connected_components_pipeline = self._create_connected_components_pipeline()
+            connected_components_start_time = time.time()
+            connected_components_tasks = connected_components_pipeline.run(
+                executor=executor, initial_tasks=valid_lsh_tasks
             )
-            id_generator_path = output_fs.sep.join([self.output_path, ID_GENERATOR_OUTPUT_FILENAME])
-            write_id_generator_to_disk(
-                id_generator_path,
-                storage_options=self.write_kwargs.get("storage_options") if self.write_kwargs is not None else None,
+            connected_components_end_time = time.time()
+            connected_components_time = connected_components_end_time - connected_components_start_time
+            workflow_result.add_pipeline_tasks("connected_components", connected_components_tasks)
+            workflow_result.add_metadata("connected_components_pipeline_time", connected_components_time)
+            logger.info(f"Connected components pipeline completed in {connected_components_time:.2f} seconds")
+            num_duplicates_identified = sum(
+                task._metadata.get("num_removal_ids", 0) for task in (connected_components_tasks or [])
             )
-            logger.info(f"Id generator written to {id_generator_path}")
-            workflow_result.add_metadata("id_generator_path", id_generator_path)
-
-            # Step 2: LSH
-            lsh_pipeline = self._create_lsh_pipeline()
-            lsh_start_time = time.time()
-            # LSH stage generates it's own input tasks from the minhash directory
-            lsh_tasks = lsh_pipeline.run(executor=executor, initial_tasks=None)
-            lsh_end_time = time.time()
-            lsh_time = lsh_end_time - lsh_start_time
-            workflow_result.add_pipeline_tasks("lsh", lsh_tasks)
-            workflow_result.add_metadata("lsh_time", lsh_time)
-            logger.info(f"LSH pipeline completed in {lsh_time:.2f} seconds")
-
-            valid_lsh_tasks = [task for task in lsh_tasks or [] if task._metadata.get("num_docs", 0) > 0]
-            if len(valid_lsh_tasks) == 0:
-                logger.info("No potential duplicates found in the dataset. Skipping connected components pipeline.")
-                workflow_result.add_metadata("num_duplicates", 0)
-            else:
-                # Step 3: Connected components
-                connected_components_pipeline = self._create_connected_components_pipeline()
-                connected_components_start_time = time.time()
-                connected_components_tasks = connected_components_pipeline.run(
-                    executor=executor, initial_tasks=valid_lsh_tasks
-                )
-                connected_components_end_time = time.time()
-                connected_components_time = connected_components_end_time - connected_components_start_time
-                workflow_result.add_pipeline_tasks("connected_components", connected_components_tasks)
-                workflow_result.add_metadata("connected_components_pipeline_time", connected_components_time)
-                logger.info(f"Connected components pipeline completed in {connected_components_time:.2f} seconds")
-                num_duplicates_identified = sum(
-                    task._metadata.get("num_removal_ids", 0) for task in (connected_components_tasks or [])
-                )
-                workflow_result.add_metadata("num_duplicates", num_duplicates_identified)
-                logger.info(f"Number of documents removed: {num_duplicates_identified}")
-        finally:
-            kill_id_generator_actor()
+            workflow_result.add_metadata("num_duplicates", num_duplicates_identified)
+            logger.info(f"Number of documents removed: {num_duplicates_identified}")
 
         total_end_time = time.time()
         total_time = total_end_time - total_start_time

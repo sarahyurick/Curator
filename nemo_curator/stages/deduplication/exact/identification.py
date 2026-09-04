@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import cudf
 
-from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR, get_id_generator_actor
+from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR
 from nemo_curator.stages.deduplication.io_utils import DeduplicationIO
 from nemo_curator.stages.deduplication.shuffle_utils.rapidsmpf_shuffler import pylibcudf_to_cudf_dataframe
 from nemo_curator.stages.deduplication.shuffle_utils.stage import ShuffleStage
@@ -49,12 +49,14 @@ class ExactDuplicateIdentification(DeduplicationIO, ShuffleStage):
     write_kwargs
         Keyword arguments for cudf.to_parquet method.
     assign_id
-        Whether to assign a unique id to each document.
+        Whether to assign a unique id to each document (requires id_manifest_dir).
     id_field
         Existing id field name if not assigning a new id.
     normalize_text
         Whether to normalize text before hashing. Normalization lowercases text,
         collapses whitespace runs, and trims leading and trailing whitespace.
+    id_manifest_dir
+        Directory of the IdManifest to assign ids from. Required when assign_id=True.
     total_nparts
         Total number of output partitions. If None, will be set automatically by the executor.
     rmm_pool_size
@@ -88,6 +90,7 @@ class ExactDuplicateIdentification(DeduplicationIO, ShuffleStage):
         spill_memory_limit: int | Literal["auto"] | None = "auto",
         enable_statistics: bool = False,
         use_async_memory: bool = True,
+        id_manifest_dir: str | None = None,
     ):
         if not assign_id and id_field is None:
             msg = "id_field must be provided if assign_id is False"
@@ -107,7 +110,8 @@ class ExactDuplicateIdentification(DeduplicationIO, ShuffleStage):
         self.output_path = self.output_fs.sep.join([output_path, self.name])
 
         super().__init__(
-            id_generator=None,  # DeduplicationIO parameter
+            id_manifest_dir=id_manifest_dir,  # DeduplicationIO parameter
+            id_manifest_storage_options=read_kwargs.get("storage_options") if read_kwargs is not None else None,
             # ShuffleStage parameters
             shuffle_on=[EXACT_DUPLICATE_GROUP_FIELD],
             total_nparts=total_nparts,
@@ -140,14 +144,9 @@ class ExactDuplicateIdentification(DeduplicationIO, ShuffleStage):
 
     def setup(self, _worker_metadata: "WorkerMetadata | None" = None) -> None:
         super().setup(_worker_metadata)
-        if self.assign_id_field:
-            try:
-                self.id_generator = get_id_generator_actor()
-            except ValueError as e:
-                msg = "Did not find a valid ID generator actor. Please ensure that the ID generator actor was started with from nemo_curator.stages.deduplication.id_generator.create_id_generator_actor()"
-                raise ValueError(msg) from e
-        else:
-            self.id_generator = None
+        if self.assign_id_field and self.id_manifest_dir is None:
+            msg = "id_manifest_dir is required when assign_id=True."
+            raise ValueError(msg)
 
     def inputs(self) -> tuple[list[str], list[str]]:
         return (["data"], [])
@@ -218,10 +217,10 @@ class ExactDuplicateIdentification(DeduplicationIO, ShuffleStage):
         Raises
         ------
         RuntimeError
-            If ID generator is not initialized when assign_id is True.
+            If id_manifest_dir is not configured when assign_id is True.
         """
-        if self.assign_id_field and self.id_generator is None:
-            msg = "ID generator not initialized. Call setup() first."
+        if self.assign_id_field and self.id_manifest_dir is None:
+            msg = "id_manifest_dir not configured. Call setup() first."
             raise RuntimeError(msg)
 
         # Optimize for single-task batch to avoid unnecessary concat overhead

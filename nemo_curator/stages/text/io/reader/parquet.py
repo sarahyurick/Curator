@@ -83,6 +83,7 @@ class ParquetReader(CompositeStage[EmptyTask, DocumentBatch]):
     task_type: Literal["document", "image", "video", "audio"] = "document"
     _generate_ids: bool = False
     _assign_ids: bool = False
+    id_manifest_dir: str | None = None
     name: str = "parquet_reader"
 
     def __post_init__(self):
@@ -105,6 +106,8 @@ class ParquetReader(CompositeStage[EmptyTask, DocumentBatch]):
                 blocksize=self.blocksize,
                 file_extensions=self.file_extensions,
                 storage_options=self.read_kwargs.get("storage_options", {}) if self.read_kwargs is not None else None,
+                build_id_manifest=self._generate_ids or self._assign_ids,
+                id_manifest_dir=self.id_manifest_dir,
             ),
             # Second stage: process file groups into document batches
             ParquetReaderStage(

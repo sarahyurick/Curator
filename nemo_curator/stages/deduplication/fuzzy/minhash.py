@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ from loguru import logger
 
 from nemo_curator.stages.base import ProcessingStage, StageInputSpecs
 from nemo_curator.stages.deduplication.fuzzy.utils import CURATOR_DEFAULT_MINHASH_FIELD
-from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR, get_id_generator_actor
+from nemo_curator.stages.deduplication.id_generator import CURATOR_DEDUP_ID_STR
 from nemo_curator.stages.deduplication.io_utils import DeduplicationIO
 from nemo_curator.stages.resources import Resources
 from nemo_curator.stages.text.utils.text import normalize_text
@@ -251,6 +251,7 @@ class MinHashStage(ProcessingStage[FileGroupTask | DocumentBatch, FileGroupTask]
         read_kwargs: dict[str, Any] | None = None,
         write_kwargs: dict[str, Any] | None = None,
         pool: bool = True,
+        id_manifest_dir: str | None = None,
     ):
         # Set ProcessingStage attributes
         self.name = self.__class__.__name__
@@ -269,26 +270,24 @@ class MinHashStage(ProcessingStage[FileGroupTask | DocumentBatch, FileGroupTask]
         self.pool = pool
         # Initialize the minhash processor in setup
         self.minhash_processor = None
-        self.id_generator = None
+        # DeduplicationIO reads these directly (see io_utils.py); the FileGroupTask
+        # (file-read) path needs a manifest for ID assignment, one built by the
+        # same FilePartitioningStage that produced its input files. DocumentBatch
+        # inputs must already carry _curator_dedup_id and don't need it.
+        self.id_manifest_dir = id_manifest_dir
+        self.id_manifest_storage_options = self.read_kwargs.get("storage_options")
+        self._id_manifest = None
 
         self.output_fs = get_fs(output_path, self.write_kwargs.get("storage_options", {}))
         self.output_path = self.output_fs.sep.join([output_path, self.name])
         create_or_overwrite_dir(self.output_path, storage_options=self.write_kwargs.get("storage_options", {}))
 
     def setup(self, _worker_metadata: "WorkerMetadata | None" = None) -> None:
-        """Initialize the GPU MinHash processor and ID generator."""
-        # The ID generator is only required for the FileGroupTask (file-read) path, where IDs
-        # are assigned at read time. DocumentBatch inputs must already carry _curator_dedup_id,
-        # so a missing actor is tolerated here; the file path surfaces a clear error at
-        # process time if it actually needs the ID generator.
-        try:
-            self.id_generator = get_id_generator_actor()
-        except ValueError:
-            logger.warning(
-                "IdGenerator actor was not found during MinHashStage setup. "
-                "FileGroupTask inputs will fail at process time; DocumentBatch inputs are unaffected."
-            )
-            self.id_generator = None
+        """Initialize the GPU MinHash processor."""
+        # The IdManifest (self.id_manifest_dir) is only required for the FileGroupTask
+        # (file-read) path, where IDs are assigned at read time -- lazily loaded by
+        # DeduplicationIO.assign_id on first use. DocumentBatch inputs must already
+        # carry _curator_dedup_id and don't need it.
 
         # Initialize the GPU minhash processor
         self.minhash_processor = GPUMinHash(
@@ -375,11 +374,10 @@ class MinHashStage(ProcessingStage[FileGroupTask | DocumentBatch, FileGroupTask]
     def _read_file_group(self, task: FileGroupTask) -> "cudf.DataFrame":
         """Read a FileGroupTask's files into cuDF, assigning IDs at read time."""
         with self._time_metric("minhash_file_read_time"):
-            if self.id_generator is None:
+            if self.id_manifest_dir is None:
                 msg = (
-                    "IdGenerator actor is required for FileGroupTask input but was not found. "
-                    "Start it via create_id_generator_actor(), or pass a DocumentBatch whose data "
-                    "already contains the _curator_dedup_id column."
+                    "id_manifest_dir is required for FileGroupTask input, or pass a DocumentBatch "
+                    "whose data already contains the _curator_dedup_id column."
                 )
                 raise RuntimeError(msg)
 

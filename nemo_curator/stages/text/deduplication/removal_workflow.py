@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,9 +52,13 @@ class TextDuplicatesRemovalWorkflow(WorkflowBase):
     duplicate_id_field: str = "id"
     duplicate_id_read_kwargs: dict[str, Any] | None = None
 
-    # id generator args
-    id_generator_path: str | None = None
-    id_generator_storage_options: dict[str, Any] | None = None
+    # id manifest args -- must point at the same manifest directory the
+    # upstream workflow (fuzzy/semantic/exact) used to assign
+    # CURATOR_DEDUP_ID_STR to input_path's files, so re-reading here resolves
+    # to the exact same ids (see IdManifest / id_manifest.py). Storage options
+    # for the manifest come from input_kwargs["storage_options"], same as the
+    # input files themselves.
+    id_manifest_dir: str | None = None
 
     # output args
     output_file_extension: str | None = None
@@ -66,9 +70,9 @@ class TextDuplicatesRemovalWorkflow(WorkflowBase):
 
     def __post_init__(self):
         """Initialize parent class after dataclass initialization."""
-        if self.id_generator_path is None and self.id_field == CURATOR_DEDUP_ID_STR:
+        if self.id_manifest_dir is None and self.id_field == CURATOR_DEDUP_ID_STR:
             logger.warning(
-                f"Using {CURATOR_DEDUP_ID_STR} as id_field for removal stage, even though we are not using id generator."
+                f"Using {CURATOR_DEDUP_ID_STR} as id_field for removal stage, even though id_manifest_dir is not set."
             )
         if self.drop_id_field and self.output_fields and self.id_field in self.output_fields:
             msg = f"Cannot drop id_field {self.id_field!r} when it is included in output_fields."
@@ -96,6 +100,8 @@ class TextDuplicatesRemovalWorkflow(WorkflowBase):
                     file_extensions=(self.input_file_extensions or get_default_file_extensions(self.input_filetype)),
                     storage_options=(self.input_kwargs or {}).get("storage_options"),
                     limit=self.input_task_limit,
+                    build_id_manifest=self.id_manifest_dir is not None,
+                    id_manifest_dir=self.id_manifest_dir,
                 )
             )
         else:
@@ -119,7 +125,7 @@ class TextDuplicatesRemovalWorkflow(WorkflowBase):
                 fields=self.input_fields,
                 read_kwargs=self.input_kwargs,
                 _generate_ids=False,
-                _assign_ids=self.id_generator_path is not None,
+                _assign_ids=self.id_manifest_dir is not None,
             )
         )
 
@@ -190,32 +196,18 @@ class TextDuplicatesRemovalWorkflow(WorkflowBase):
 
             executor = XennaExecutor()
 
-        output_tasks: list[FileGroupTask] | None = None
-        execution_time = 0.0
-        num_duplicates_removed = 0
+        if initial_tasks is not None and self.id_manifest_dir is not None:
+            # FilePartitioningStage (which normally stamps this) is skipped
+            # when initial_tasks is provided directly, so stamp it here.
+            from nemo_curator.stages.deduplication.id_manifest import ID_MANIFEST_DIR_METADATA_KEY
 
-        if self.id_generator_path is not None:
-            from nemo_curator.stages.deduplication.id_generator import (
-                create_id_generator_actor,
-                kill_id_generator_actor,
-            )
+            for task in initial_tasks:
+                task._metadata = {**(task._metadata or {}), ID_MANIFEST_DIR_METADATA_KEY: self.id_manifest_dir}
 
-            create_id_generator_actor(self.id_generator_path, storage_options=self.id_generator_storage_options)
-            try:
-                start_time = time.time()
-                output_tasks = pipeline.run(executor, initial_tasks=initial_tasks)
-                execution_time = time.time() - start_time
-                num_duplicates_removed = self._count_removed_duplicates(output_tasks)
-            except Exception as e:
-                logger.error(f"Error running pipeline: {e}")
-                raise
-            finally:
-                kill_id_generator_actor()
-        else:
-            start_time = time.time()
-            output_tasks = pipeline.run(executor, initial_tasks=initial_tasks)
-            execution_time = time.time() - start_time
-            num_duplicates_removed = self._count_removed_duplicates(output_tasks)
+        start_time = time.time()
+        output_tasks = pipeline.run(executor, initial_tasks=initial_tasks)
+        execution_time = time.time() - start_time
+        num_duplicates_removed = self._count_removed_duplicates(output_tasks)
 
         workflow_result.add_pipeline_tasks("removal", output_tasks)
         workflow_result.add_metadata("total_time", execution_time)

@@ -169,13 +169,10 @@ class JsonlReaderStage(BaseFileReader):
             uses the direct PyArrow reader; all other engines, including ``"pyarrow"``,
             are passed to ``pd.read_json``. Defaults to {}.
         _generate_ids (bool): Whether to generate monotonically increasing IDs across all files.
-            This uses IdGenerator actor, which needs to be instantiated before using this stage.
-            This can be slow, so it is recommended to use AddId stage instead, unless monotonically increasing IDs
-            are required.
-        _assign_ids (bool): Whether to assign monotonically increasing IDs from an IdGenerator.
-            This uses IdGenerator actor, which needs to be instantiated before using this stage.
-            This can be slow, so it is recommended to use AddId stage instead, unless monotonically increasing IDs
-            are required.
+            Requires an IdManifest (see id_manifest_dir on JsonlReader), normally built by
+            FilePartitioningStage as part of the composite stage's decompose().
+        _assign_ids (bool): Whether to assign monotonically increasing IDs from an IdManifest.
+            Same requirement as _generate_ids.
     """
 
     name: str = "jsonl_reader"
@@ -230,6 +227,7 @@ class JsonlReader(CompositeStage[EmptyTask, DocumentBatch]):
     file_extensions: list[str] = field(default_factory=lambda: FILETYPE_TO_DEFAULT_EXTENSIONS["jsonl"])
     _generate_ids: bool = False
     _assign_ids: bool = False
+    id_manifest_dir: str | None = None
     name: str = "jsonl_reader"
 
     def __post_init__(self):
@@ -254,6 +252,8 @@ class JsonlReader(CompositeStage[EmptyTask, DocumentBatch]):
                 storage_options=self.read_kwargs.get("storage_options", None)
                 if self.read_kwargs is not None
                 else None,
+                build_id_manifest=self._generate_ids or self._assign_ids,
+                id_manifest_dir=self.id_manifest_dir,
             ),
             JsonlReaderStage(
                 fields=self.fields,
