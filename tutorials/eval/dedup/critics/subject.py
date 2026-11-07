@@ -89,25 +89,25 @@ class SubjectVerification(BaseModel):
     explanation: str = Field(min_length=1)
 
 
-def subject_column(model_alias: str) -> dd.LLMStructuredColumnConfig:
+def subject_column(model_alias: str, prompt_dir: Path | None = None) -> dd.LLMStructuredColumnConfig:
     """The DataDesigner column that produces `subject_review` for rows marked `subject_should_run`."""
     return dd.LLMStructuredColumnConfig(
         name="subject_review",
         model_alias=model_alias,
-        prompt=(_PROMPTS / "subject_pair.jinja").read_text(encoding="utf-8"),
-        system_prompt=(_PROMPTS / "subject_system.jinja").read_text(encoding="utf-8"),
+        prompt=((prompt_dir or _PROMPTS) / "subject_pair.jinja").read_text(encoding="utf-8"),
+        system_prompt=((prompt_dir or _PROMPTS) / "subject_system.jinja").read_text(encoding="utf-8"),
         output_format=SubjectReview,
         skip=dd.SkipConfig(when="{{ not subject_should_run }}"),
     )
 
 
-def verifier_column(model_alias: str) -> dd.LLMStructuredColumnConfig:
+def verifier_column(model_alias: str, prompt_dir: Path | None = None) -> dd.LLMStructuredColumnConfig:
     """The DataDesigner column that produces `subject_verifier_review` for rows marked `subject_verifier_should_run`."""
     return dd.LLMStructuredColumnConfig(
         name="subject_verifier_review",
         model_alias=model_alias,
-        prompt=(_PROMPTS / "subject_verifier_pair.jinja").read_text(encoding="utf-8"),
-        system_prompt=(_PROMPTS / "subject_verifier_system.jinja").read_text(encoding="utf-8"),
+        prompt=((prompt_dir or _PROMPTS) / "subject_verifier_pair.jinja").read_text(encoding="utf-8"),
+        system_prompt=((prompt_dir or _PROMPTS) / "subject_verifier_system.jinja").read_text(encoding="utf-8"),
         output_format=SubjectVerification,
         skip=dd.SkipConfig(when="{{ not subject_verifier_should_run }}"),
     )

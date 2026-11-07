@@ -1,0 +1,46 @@
+{
+  "policy": "C0",
+  "candidate": "c0-boundary-v2",
+  "source_commit": "51ac9e375ee3c7bacc94ebd1c3b29f86336e50af",
+  "source_path": "tutorials/eval/dedup/calibration/round-024-resume-8h/frozen-start85/variant",
+  "acceptance_passed": false,
+  "historical_final_personal120_original_three_runs": {
+    "correct_directions": 612,
+    "directions": 720,
+    "correct_pairs": 288,
+    "pairs": 360
+  },
+  "sha256": {
+    "critics/coverage_pair.jinja": "c6ff3752ce7a27afe317440a2f6f5542d3c91713723e4a2d0570f6468aa376b3",
+    "critics/coverage_system.jinja": "9f57e182af8b4044b6677297eda91cefb942186c9ec1fb1a5a8e6708378a92cb",
+    "critics/subject_pair.jinja": "56d1d317d465bc5e5bddeaad44791412dbe5257fed06ce059a5451a0d72e5997",
+    "critics/subject_system.jinja": "1aa8e6be7412829f651387edbac45b7315e0ea0ecfa38e0f7e00370d33326c99",
+    "critics/subject_verifier_pair.jinja": "4a82369465af4835831fe10f65be0cb1104a795b731f18e25ed868e13a085760",
+    "critics/subject_verifier_system.jinja": "ce4bd85540f9151e6c98715ef2155f14874141ad986c2ba693fa1446952fda49",
+    "judge_config/fuzzy_pair_judge.yaml": "9e19f28005fa6cb6fe456fd7c912a90548173febd4e02fece6fe895d0cba9c2e",
+    "judge_config/pair.jinja": "46607f298644e49beab95d3df33fb3411410e887a1feb0834ca2b1d3f63be1cd",
+    "judge_config/system.jinja": "a6d630ea7008f2a69115e8a78188bd925bc7aa8d6c28065412c8e49fb651fd4a"
+  },
+  "revision": "boundary-v2",
+  "baseline": {
+    "pr_commit": "3a23978265a9681ac14ffbc855314caf5653f85e",
+    "candidate": "candidate-06-languagefirst1",
+    "sha256": {
+      "critics/coverage_pair.jinja": "4b5037a1882af3f699ff21f9b73991fe910696a8486f58258e52a4c19dc265b0",
+      "critics/coverage_system.jinja": "a9c8121270288abbc692fd849bd3becd31ccae0b6152d46f8f45c139243ac904",
+      "critics/subject_pair.jinja": "424d1472db35ee18987281f43b81ad42b8626e5ac7aabf556287d07dbef2c419",
+      "critics/subject_system.jinja": "c55f4418c04affb3334eac922f3947f532008df6f9d6aef9e1ef64eb056ae62c",
+      "critics/subject_verifier_pair.jinja": "548138c71a2f4a8ccf0540b3685e8346254534d4e6f3e6dbc5b11804ce33545c",
+      "critics/subject_verifier_system.jinja": "0bbcc96078900239ec8fdfbc142c3a9d900f1bf0ea25b8ce5c65885b309bd9ae",
+      "judge_config/fuzzy_pair_judge.yaml": "77d14b44d188a96008b7786cd7a59fbdf47518bb7403d1d567bf3230638c7d3e",
+      "judge_config/pair.jinja": "06562a24a39d44b0c48368c21acad4cf667bd8567b7daec19b204d7181806a71",
+      "judge_config/system.jinja": "e1c66d5275d9367637c27d4bb7d9af8c02394db91c6834adc26c6a5ca71d0caf"
+    }
+  },
+  "changes": [
+    "Prioritize named liability parties and actual product/offer subjects before generic template slots.",
+    "Require actual bilateral cookie-proposition coverage; retain unilateral conditions.",
+    "Keep empty headings harmless and preserve existing directional, language and evidence rules."
+  ],
+  "development_iteration": 6
+}

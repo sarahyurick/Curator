@@ -1,0 +1,143 @@
+---
+title: "C0 retention policy candidate"
+---
+
+C0 is an optional span-based judge policy for multilingual language-model
+pretraining. In each direction it asks what useful contribution would disappear
+if one document were removed while the other were retained. It aligns the main
+judge, coverage critic, subject critic, and fixed subject verifier on the same
+conditional rules. The existing tutorial policy remains the default.
+
+This candidate extends the tutorial in
+[#2426](https://github.com/NVIDIA-NeMo/Curator/pull/2426) and the critic pipeline in
+[#2484](https://github.com/NVIDIA-NeMo/Curator/pull/2484). The complete data-preparation
+and span-alignment steps require #2426; the critic branch alone does not include them.
+
+## Policy boundaries
+
+- Preserve substantive facts, explanations, procedures, obligations, actual action
+  destinations, and substantive body-language versions, including faithful translations.
+- Permit service-location slots only when procedures, actual prices, and conditions
+  match. Equivalent localized form UI requires matching steps, channels, triggers,
+  and conditions; added capabilities or privacy purposes remain useful.
+- Treat cookie introductions and repeated stock paragraphs as covered only when
+  the complete corresponding meaning survives. Additional concrete processing
+  conditions and named liability parties remain protected.
+- Allow only the covering direction for a useful one-sided addition. A broader
+  product list must preserve every product fact, price, availability, and condition;
+  filter labels and their resulting counts alone do not establish a conflict.
+- Require fully unresolved summaries for incomplete evidence. A NO needs a real
+  removed-side span citation and its literal lost phrase.
+
+Critics retain their existing veto-only authority. They cannot promote a main
+NO into permission to remove a document.
+
+## Run the candidate
+
+Use an existing Curator environment with the evaluation dependencies installed.
+Prepare the pairs and `semantic_diff` packets using steps 1–4 of #2426. Keep the
+original `pair_id`, `text_a`, `text_b`, and truncation fields in the records.
+
+The nine versioned files live under
+`tutorials/eval/dedup/critics/policies/c0/`: three main-judge files in
+`judge_config/` and six critic templates in `critics/`. Copy the main config and its
+adjacent templates to a run directory:
+
+```bash
+mkdir -p output/dedup_eval/c0
+cp -R tutorials/eval/dedup/critics/policies/c0/judge_config output/dedup_eval/c0/
+```
+
+Before starting, set the copied YAML's model path and replica count for your
+available hardware. Check the context window against the complete rendered
+packet plus output budget. The frozen YAML uses thinking off, temperature 0.2,
+and a 6,144-token output budget; changing runtime settings creates a new comparison.
+Keep the fifteen configured scores, their order, and relative template paths intact.
+
+Run the main judge through the existing workflow with failed-row restoration enabled:
+
+```python
+from nemo_curator.core.client import RayClient
+from nemo_curator.eval.llm_judge import LLMJudgeWorkflow
+
+with RayClient(ray_temp_dir="/tmp/ray_c0_main"):
+    LLMJudgeWorkflow(
+        judge_config="output/dedup_eval/c0/judge_config/fuzzy_pair_judge.yaml",
+        input_path="output/dedup_eval/span_aligned_pairs",
+        output_path="output/dedup_eval/c0/main",
+        keep_failed_rows=True,
+        row_id_column="pair_id",
+    ).run()
+```
+
+Review the saved main results with the same serving configuration and the C0 critics:
+
+```bash
+python tutorials/eval/dedup/6_run_critics.py \
+  --c0 --subject \
+  --judge-config output/dedup_eval/c0/judge_config/fuzzy_pair_judge.yaml \
+  --input-path output/dedup_eval/c0/main \
+  --output-path output/dedup_eval/c0/reviewed
+```
+
+The `--c0` option selects all six C0 critic templates and appends a read-only
+audit. It does not rerun or replace the saved main judgment; results produced
+with a different rubric must be regenerated with the C0 main config first.
+
+## Inspect validity before reporting results
+
+The output retains the original main judgment, `coverage_decision`, and
+`final_decision`. It adds `c0_main_status`, `c0_coverage_status`, and
+`c0_final_status`, each with a corresponding `*_errors` list. Statuses are
+`valid`, `unresolved`, or `invalid`.
+
+The audit checks configured score values and reasoning, summary consistency,
+literal ledger contradictions, span offsets, truncation, and directional NO
+citations/quotes. It does not decide whether a cited loss is semantically correct.
+Invalid and unresolved observations receive zero credit in reference-agreement
+calculations with fixed denominators. Raw answers remain available for separate
+wrong-allow and wrong-block counts. A saved final YES alone is not a validated
+removal permission: inspect its status and critic actions as well.
+
+Literal evidence accepts straight or curly single/double quotes and backticks.
+A quote may include displayed reading context when its original character range
+overlaps the cited span's core difference. Quoting only shared padding does not
+establish a lost contribution.
+The main prompt marks each difference's core separately from its reading context.
+Choose a short verbatim quote within the cited displayed chunk; a sentence that
+continues into another chunk does not become evidence for the first chunk's ID.
+
+Reconcile expected input IDs against every output stage before computing rates.
+Failed-row restoration cannot by itself guarantee completion after a failed job
+or all-failed preview. Missing, duplicate, or unexpected IDs must be reported;
+missing observations remain in the expected denominator. This candidate does
+not resolve the separate restoration issues discussed on #2484.
+
+## Provenance and limits
+
+The current `boundary-v2` revision derives from the original C0 delivery at
+[`51ac9e37`](https://github.com/fhschina/Curator/tree/51ac9e375ee3c7bacc94ebd1c3b29f86336e50af/tutorials/eval/dedup/calibration/round-024-resume-8h/frozen-start85/variant).
+It makes the existing exceptions explicit: named liability parties and concrete
+product offers take precedence over generic template slots; cookie framing is
+covered only when the corresponding complete propositions actually survive;
+empty headings alone do not add records. All four judge/reviewer prompts use
+these checks. The output schema, sampling settings, audit, and veto-only critic
+authority are unchanged.
+
+`provenance.json` records the current SHA-256 values and the original candidate's
+hashes under `baseline`. Commit
+[`3a239782`](https://github.com/fhschina/Curator/tree/3a23978265a9681ac14ffbc855314caf5653f85e/tutorials/eval/dedup/critics/policies/c0)
+retains the original prompt bundle with the corrected literal-evidence audit.
+Acceptance of the revised candidate remains unestablished; development examples
+and assistant-assisted diagnostic reviews are not independent human validation.
+
+The [historical three-run report](https://github.com/fhschina/Curator/blob/51ac9e375ee3c7bacc94ebd1c3b29f86336e50af/fern/versions/main/pages/curate-text/process-data/deduplication/retention-policy-v3-report-en.mdx)
+records final-pipeline agreement of 612/720 directions (85.00%) and 288/360 whole
+pairs (80.00%) on repeated personal120 development references. These are exposed,
+dependent development observations, not independent human accuracy or corpus
+deletion-risk estimates. Full acceptance remains false: the 90/85 target,
+technical validity, and latest18/controlled26 hard-regression groups failed.
+
+The historical metrics belong to the frozen original experiment. The optional
+audit here runs in the tutorial pipeline and must be evaluated separately after
+integration; its tests establish integration behavior, not renewed model accuracy.
