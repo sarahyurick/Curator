@@ -87,13 +87,13 @@ class CoverageReview(BaseModel):
         return ids
 
 
-def coverage_column(model_alias: str) -> dd.LLMStructuredColumnConfig:
+def coverage_column(model_alias: str, prompt_dir: Path | None = None) -> dd.LLMStructuredColumnConfig:
     """The DataDesigner column that produces `coverage_review` for rows marked `coverage_should_run`."""
     return dd.LLMStructuredColumnConfig(
         name="coverage_review",
         model_alias=model_alias,
-        prompt=(_PROMPTS / "coverage_pair.jinja").read_text(encoding="utf-8"),
-        system_prompt=(_PROMPTS / "coverage_system.jinja").read_text(encoding="utf-8"),
+        prompt=((prompt_dir or _PROMPTS) / "coverage_pair.jinja").read_text(encoding="utf-8"),
+        system_prompt=((prompt_dir or _PROMPTS) / "coverage_system.jinja").read_text(encoding="utf-8"),
         output_format=CoverageReview,
         skip=dd.SkipConfig(when="{{ not coverage_should_run }}"),
     )
@@ -180,7 +180,13 @@ class CoverageApplyStage(ProcessingStage[DocumentBatch, DocumentBatch]):
         ]
 
     def outputs(self) -> tuple[list[str], list[str]]:
-        return ["data"], ["coverage_action", "coverage_reason", "coverage_evidence", "final_decision"]
+        return ["data"], [
+            "coverage_action",
+            "coverage_reason",
+            "coverage_evidence",
+            "coverage_decision",
+            "final_decision",
+        ]
 
     @staticmethod
     def _check_proof(review: CoverageReview, packet: SpanPacket) -> tuple[str, list[dict]]:  # noqa: C901, PLR0912
@@ -305,6 +311,9 @@ class CoverageApplyStage(ProcessingStage[DocumentBatch, DocumentBatch]):
                 "coverage_action": pa.array([action for action, *_ in results], type=pa.string()),
                 "coverage_reason": pa.array([reason for _, reason, *_ in results], type=pa.string()),
                 "coverage_evidence": pa.array([evidence for _, _, evidence, _ in results], type=_EVIDENCE_ARROW_TYPE),
+                "coverage_decision": pa.array(
+                    [final.model_dump() if final else None for *_, final in results], type=DECISION_ARROW_TYPE
+                ),
                 "final_decision": pa.array(
                     [final.model_dump() if final else None for *_, final in results], type=DECISION_ARROW_TYPE
                 ),

@@ -1,0 +1,214 @@
+# User-owned evaluation semantics: replace the model, prompts, and rubric for another task.
+#
+# Judges whether text_a/text_b (produced by 3_build_pair_dataset.py, step 3 of this example,
+# with semantic_diff/truncated added by 4_span_alignment.py, step 4) are actually duplicates,
+# independent of what fuzzy dedup decided about them.
+#
+# The rubric is a semantic-retention judgment: rather than one yes/no "duplicate" score, it asks
+# the model to work through what each document retains (content profile, shared basis, per-side
+# delta, hard conflicts, translation status), then derive a replacement direction, relation type,
+# materiality, and primary difference from that analysis -- see system.jinja/pair.jinja for the
+# full reasoning the model is asked to follow.
+#
+# The model is not shown raw text_a/text_b directly -- pair.jinja renders the semantic_diff span
+# packet built by 4_span_alignment.py's build_semantic_diff() instead: a deterministic
+# SHARED/A_ONLY/B_ONLY lexical alignment with stable span IDs, so a short conflicting value (an
+# id, price, date) in otherwise-identical text is surfaced explicitly rather than left for the
+# model to notice unaided. semantic_diff also flags truncated pairs; the rubric's unresolved/low
+# escape hatches exist so a truncated or incomplete packet doesn't get judged as conclusive.
+#
+# As bundled, this uses 8 GPUs (num_replicas: 8 x tensor_parallel_size: 1). Edit num_replicas
+# and/or tensor_parallel_size to match your hardware, and set models[0].model below before running.
+models:
+  - alias: judge
+    model: /path/to/your/hf_cache/Qwen3.8-27B
+    # Keep the Hugging Face identifier as the API name while serving local weights.
+    served_model_name: Qwen/Qwen3.8-27B
+    dynamo_model:
+      num_replicas: 8
+      mode: aggregated
+      runtime_env:
+        config:
+          setup_timeout_seconds: 1800
+      engine_kwargs:
+        tensor_parallel_size: 1
+        max_model_len: 32768  # size prompt truncation (pair.jinja) to fit this
+        max_num_seqs: 64
+        gpu_memory_utilization: 0.92
+        enable_prefix_caching: true
+    inference_parameters:
+      # Was 0.0 (deterministic): the model's 5 automatic conversation restarts on a
+      # non-retryable failure just re-sampled the identical greedy output, so a bad
+      # parse/enum-cross-wire never had a chance to self-correct. Non-zero lets restarts
+      # actually differ.
+      temperature: 0.2
+      # Structured judging needs the final JSON, not Qwen's private deliberation.
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+      # 15 scores + reasoning per call needs more room than a single-score rubric.
+      max_tokens: 6144
+      timeout: 600
+      max_parallel_requests: 64
+
+dynamo_server:
+  subprocess_env:
+    DYN_SYSTEM_PORT: "0"
+
+inference_server:
+  health_check_timeout_s: 3600
+
+execution:
+  stages:
+    - name: pair_semantic_judgment
+      num_workers: 8
+      judges:
+        - name: pair_semantic_judgment
+          model_alias: judge
+          system_prompt_path: system.jinja
+          prompt_path: pair.jinja
+          scores:
+            - name: span_content_profile_a
+              description: Classify A by retained meaning. Protect useful actual records while allowing confirmed harmless service-slot substitutions; ordinary buttons/navigation alone do not establish a page role.
+              options:
+                substantive_main: A contains retainable page-specific meaning.
+                non_main_only: A contains reusable cookie, legal, auth, error, paywall, navigation or platform messaging. This profile does not make useful explanations or obligations disposable.
+                unreadable: A cannot be judged safely.
+            - name: span_content_profile_b
+              description: Classify B by retained meaning. Protect useful actual records while allowing confirmed harmless service-slot substitutions; ordinary buttons/navigation alone do not establish a page role.
+              options:
+                substantive_main: B contains retainable page-specific meaning.
+                non_main_only: B contains reusable cookie, legal, auth, error, paywall, navigation or platform messaging. This profile does not make useful explanations or obligations disposable.
+                unreadable: B cannot be judged safely.
+            - name: span_translation_status
+              description: Cite bilateral IDs for complete faithful translation of the same substantive record or equivalent complete non-main message. Equivalent facts do not imply replaceability of distinct-language body prose; language is not an identity conflict. Identify the actual cited clause language and functional role. Equivalent routine password-link form UI and same-language privacy paraphrases do not establish different-language substantive body versions; changed actual steps, account capabilities or privacy conditions remain useful. Apply the mechanism-qualified form branch only when actual actions, channel, sequence, capabilities and conditions match; a shared goal alone is insufficient. Qualified form localization and covered same-language body paraphrases require coherent harmless/covered deltas and positive directions, not a protected body-language loss.
+              options:
+                complete_faithful: Both sides express the same complete factual content in different languages. This does not remove the contribution of distinct-language substantive body prose; equivalent localized headings and routine authentication-form instructions alone are harmless.
+                partial_or_additive: Translation is incomplete, additive, or changes retained meaning.
+                not_translation: Translation is not the relationship.
+                unresolved: Visible evidence is insufficient.
+            - name: span_shared_basis
+              description: Cite S### or bilateral A### and B### IDs for the same retained content under this policy. An otherwise identical service description qualifies despite changed city/destination labels, including titles. Apply that exception before deciding the basis is only a template. Complete shared cookie definitions or an otherwise equivalent permitted generic template remain a verified basis after harmless introductory framing, repetition and allowed name/category slots. A complete equivalent routine form message qualifies as verified_equivalent_non_main_message after its mechanism and body-language conditions match; it is not none merely because it is form UI.
+              options:
+                verified_substantive_record: Cited spans establish the same retained substantive content; confirmed harmless service-location slots qualify even when the locations differ.
+                verified_equivalent_non_main_message: Cited spans establish a complete retained non-main message shared by both sides; one side may additionally contain useful prose without invalidating this basis.
+                none: No qualifying retained-content or complete-message basis exists after applying conditional exceptions.
+                unresolved: Visible evidence is insufficient.
+            - name: span_a_delta
+              description: Classify all A### spans together and cite decisive A### IDs. Choose the most material uncovered class. Filtered subset paths and their resulting counts alone do not defeat complete product-fact coverage; actual price, stock and condition conflicts remain material. Apply conditional generic-cookie framing/repetition and permitted template-slot boundaries before assigning a retained A-only contribution. Actual operational destinations and concrete additional processing details remain material. Identify the actual cited clause language and functional role. Equivalent routine password-link form UI and same-language privacy paraphrases do not establish different-language substantive body versions; changed actual steps, account capabilities or privacy conditions remain useful. Apply the mechanism-qualified form branch only when actual actions, channel, sequence, capabilities and conditions match; a shared goal alone is insufficient. Qualified form localization and covered same-language body paraphrases require coherent harmless/covered deltas and positive directions, not a protected body-language loss.
+              options:
+                none: No A-only span exists.
+                semantically_covered: A-only factual meaning is covered by B through paraphrase or translation; substantive different-language body material still requires retention, while equivalent localized headings and routine authentication-form instructions are harmless.
+                universal_ui_or_repetition: Every A-only span lacks any useful uncovered proposition. Empty form fields and labels can be harmless UI; an explicit communication consent, permission, access condition or obligation is material_non_main_message_change even if it is boilerplate in a form. This class covers only harmless UI, redundant heading/byline, parser noise, or repetition, including only the confirmed harmless service slots, empty-cart currency, incidental metadata and same-terms reference URLs. This also includes the conditional cookie framing/repetition and permitted generic template slots defined by the policy.
+                same_record_content_extension: A adds a useful uncovered proposition to the shared record after applying the conditional exceptions. An approved category/provider slot, stock cookie introduction over complete shared definitions, or already-covered repeated paragraph is excluded from this material class.
+                record_identity_role_or_state_change: A changes a useful retained record, state, role or actual operational destination. An approved category/location label in otherwise equivalent generic marketing, citation-site slot, or provider name in the specified short generic cookie notice is harmless even when repeated or placed in the title. Actual product records, submission/payment/account destinations and named liability parties remain protected.
+                material_non_main_message_change: A changes an actual purpose, procedure, permission, condition or obligation beyond the conditional exceptions. A permitted generic provider-name slot alone does not change the described processing behavior. A stock paragraph covered elsewhere is repetition; concrete additional processing restrictions remain material.
+                other_substantive_content: A adds another useful uncovered proposition after the conditional exceptions. Cite the additional assertion beyond any permitted slot or already-covered stock wording.
+                unresolved: The full A-only delta cannot be classified safely.
+            - name: span_b_delta
+              description: Classify all B### spans together and cite decisive B### IDs. Choose the most material uncovered class. Filtered subset paths and their resulting counts alone do not defeat complete product-fact coverage; actual price, stock and condition conflicts remain material. Apply conditional generic-cookie framing/repetition and permitted template-slot boundaries before assigning a retained B-only contribution. Actual operational destinations and concrete additional processing details remain material. Identify the actual cited clause language and functional role. Equivalent routine password-link form UI and same-language privacy paraphrases do not establish different-language substantive body versions; changed actual steps, account capabilities or privacy conditions remain useful. Apply the mechanism-qualified form branch only when actual actions, channel, sequence, capabilities and conditions match; a shared goal alone is insufficient. Qualified form localization and covered same-language body paraphrases require coherent harmless/covered deltas and positive directions, not a protected body-language loss.
+              options:
+                none: No B-only span exists.
+                semantically_covered: B-only factual meaning is covered by A through paraphrase or translation; substantive different-language body material still requires retention, while equivalent localized headings and routine authentication-form instructions are harmless.
+                universal_ui_or_repetition: Every B-only span lacks any useful uncovered proposition. Empty form fields and labels can be harmless UI; an explicit communication consent, permission, access condition or obligation is material_non_main_message_change even if it is boilerplate in a form. This class covers only harmless UI, redundant heading/byline, parser noise, or repetition, including only the confirmed harmless service slots, empty-cart currency, incidental metadata and same-terms reference URLs. This also includes the conditional cookie framing/repetition and permitted generic template slots defined by the policy.
+                same_record_content_extension: B adds a useful uncovered proposition to the shared record after applying the conditional exceptions. An approved category/provider slot, stock cookie introduction over complete shared definitions, or already-covered repeated paragraph is excluded from this material class.
+                record_identity_role_or_state_change: B changes a useful retained record, state, role or actual operational destination. An approved category/location label in otherwise equivalent generic marketing, citation-site slot, or provider name in the specified short generic cookie notice is harmless even when repeated or placed in the title. Actual product records, submission/payment/account destinations and named liability parties remain protected.
+                material_non_main_message_change: B changes an actual purpose, procedure, permission, condition or obligation beyond the conditional exceptions. A permitted generic provider-name slot alone does not change the described processing behavior. A stock paragraph covered elsewhere is repetition; concrete additional processing restrictions remain material.
+                other_substantive_content: B adds another useful uncovered proposition after the conditional exceptions. Cite the additional assertion beyond any permitted slot or already-covered stock wording.
+                unresolved: The full B-only delta cannot be classified safely.
+            - name: span_hard_conflict
+              description: Cite incompatible A### and B### claims. Generic module/program/software wording in the same notice with unchanged maintainer and terms does not identify distinct products without a stated scope or functional difference. Absence or an independent extra section alone is not a conflict; check whether the retained record or complete message is preserved. Filtered subset paths and their resulting counts alone do not defeat complete product-fact coverage; actual price, stock and condition conflicts remain material. Harmless cookie framing, an already covered repeated stock paragraph and permitted generic template slots are not incompatible claims; new concrete conditions or actual operational destinations are different cases.
+              options:
+                none: No conflicting material value or role is visible.
+                identity_or_slot: Useful retained record identity or a defining claim conflicts after applying all conditional exceptions. Category/location labels in the permitted generic marketing, citation-site slots and the permitted generic cookie provider names are harmless; actual operational destinations and liable parties remain material.
+                state_or_version: Date, count, price, version, availability, status, or result conflicts.
+                page_role: Page functions conflict.
+                list_membership: List members, rankings, results, or snapshot contents conflict.
+                legal_context: An actual obligation, jurisdiction, permission or liable party conflicts. A provider-name slot in the specified short generic cookie notice with equivalent behavior is excluded; concrete changed processing restrictions remain protected.
+                other_material: Another explicit material conflict exists.
+                unresolved: Visible evidence is insufficient.
+            - name: a_can_replace_b
+              description: When no, this score's own reasoning MUST start with an existing B### span ID (or bilateral S### explicitly identifying B), followed by its real lost phrase and why A fails to cover it. Evidence only in other ledger fields is insufficient. Language retention also needs a B substantive body span, beyond equivalent localized headings or short authentication UI instructions. Actual submission emails and action destinations must be covered. A is yes when B loses no useful contribution; unchanged service procedure/prices/conditions permit harmless location slots. Truncated/incomplete evidence always requires unresolved. Generic cookie introductions over shared full definitions, covered repetition and permitted template names alone do not justify No; inspect all remaining useful B meaning for coverage. Identify the actual cited clause language and functional role. Equivalent routine password-link form UI and same-language privacy paraphrases do not establish different-language substantive body versions; changed actual steps, account capabilities or privacy conditions remain useful. Apply the mechanism-qualified form branch only when actual actions, channel, sequence, capabilities and conditions match; a shared goal alone is insufficient. Qualified form localization and covered same-language body paraphrases require coherent harmless/covered deltas and positive directions, not a protected body-language loss.
+              options:
+                "yes": A safely replaces B.
+                "no": B has conflicting or uncovered retained meaning.
+                unresolved: The ledger is unresolved.
+            - name: b_can_replace_a
+              description: When no, this score's own reasoning MUST start with an existing A### span ID (or bilateral S### explicitly identifying A), followed by its real lost phrase and why B fails to cover it. Evidence only in other ledger fields is insufficient. Language retention also needs an A substantive body span, beyond equivalent localized headings or short authentication UI instructions. Actual submission emails and action destinations must be covered. B is yes when A loses no useful contribution; unchanged service procedure/prices/conditions permit harmless location slots. Truncated/incomplete evidence always requires unresolved. Generic cookie introductions over shared full definitions, covered repetition and permitted template names alone do not justify No; inspect all remaining useful A meaning for coverage. Identify the actual cited clause language and functional role. Equivalent routine password-link form UI and same-language privacy paraphrases do not establish different-language substantive body versions; changed actual steps, account capabilities or privacy conditions remain useful. Apply the mechanism-qualified form branch only when actual actions, channel, sequence, capabilities and conditions match; a shared goal alone is insufficient. Qualified form localization and covered same-language body paraphrases require coherent harmless/covered deltas and positive directions, not a protected body-language loss.
+              options:
+                "yes": B safely replaces A.
+                "no": A has conflicting or uncovered retained meaning.
+                unresolved: The ledger is unresolved.
+            - name: relation_type
+              description: Containment means one side fully preserves the other's retained record or complete message and adds useful content without conflict. Additions can include independent prose or policy clauses. Faithful substantive translations are related_non_duplicate for multilingual retention; benign same-language equivalence is near-surface.
+              options:
+                exact: Complete visible cleaned texts are identical.
+                canonical_exact: Only normalization, whitespace, punctuation, encoding, or formatting differs.
+                near_surface: Useful content is bidirectionally replaceable after harmless differences; different-language substantive body versions are protected.
+                containment: Exactly one side adds useful uncovered content while preserving the other's complete retained record or message, including non-main policy text. Profile differences alone do not prevent containment.
+                version_related: The same evolving record has a conflicting state or version.
+                related_non_duplicate: Related records or different-language substantive body versions must remain separate; confirmed harmless service slots are allowed.
+                unrelated: No meaningful main-content relationship exists.
+                unresolved: The ledger is unresolved.
+            - name: material_difference
+              description: Containment and no/no are major, including linguistic loss from substantive translations. Confirmed harmless boundaries use none together with primary_material_difference=none. Never pair minor with primary none.
+              options:
+                none: No useful substantive or linguistic contribution is lost.
+                minor: A minor non-core attribute changes; requires a specific non-none primary difference. Do not use merely because harmless strings differ.
+                major: Retained identity, state, role, list, legal meaning, content, or addition differs.
+                unresolved: The ledger is unresolved.
+            - name: primary_material_difference
+              description: Select the single decisive retained-content difference, consistent with the ledger fields above. Use only this field's options; state_or_version is a span_hard_conflict value and is illegal here.
+              options:
+                none: No material difference exists.
+                main_content_addition_deletion: Useful retained prose, explanations or obligations occur on one side only, and the other side is fully covered without conflict. This includes additions beyond a complete shared policy message.
+                entity_slot_change: A useful retained person, organization, product, service, controller or location conflicts after all conditional exceptions. The permitted generic marketing category/location, citation-site and generic cookie provider slots alone cannot select this value. Actual action destinations and liability parties remain protected.
+                document_identity_change: An actual retained record, product, role or target conflicts beyond the approved template slots. The title position or repeated occurrence of a permitted marketing category/location label alone does not make it a product record.
+                number_change: A material number, price, quantity, count, or measurement conflicts.
+                date_time_change: A material date or time conflicts.
+                product_version_change: A product version conflicts.
+                result_set_change: List members, rankings, search results, or outcomes differ.
+                page_role_change: Page functions differ.
+                legal_context_change: Controller, obligation, jurisdiction, permission, or legal meaning differs.
+                negation_change: Negation changes meaning.
+                code_literal_change: Code literals, commands, identifiers, or parameters differ.
+                code_output_change: Code outputs or execution results differ.
+                other_material: A material difference exists and no specific option fits.
+                unresolved: The ledger is unresolved.
+            - name: dominant_overlap_source
+              description: Report the largest visible similarity source; it cannot establish identity by itself. If evidence is incomplete or truncated, this summary field MUST be unresolved even when the visible similarity source seems obvious; do not substitute its visible overlap type.
+              options:
+                main_content: Shared substantive content dominates.
+                shared_page_template: Reusable page template dominates.
+                site_chrome: Navigation, headers, footers, or platform chrome dominates.
+                cookie_consent: Cookie or consent text dominates.
+                legal_policy_template: Generic legal or policy wording dominates.
+                error_auth_paywall: Error, authentication, login, or paywall text dominates.
+                local_passage: A local matching passage is not representative.
+                parser_artifact: Extraction artifacts dominate.
+                none: No meaningful overlap is visible.
+                unresolved: The ledger is unresolved.
+            - name: primary_risk_factor
+              description: Select the most specific observable deduplication trap.
+              options:
+                none: No distinct trap is visible.
+                boilerplate_dominated_similarity: Non-main text dominates apparent similarity.
+                template_slot_collision: Shared template masks different records or slots.
+                identifier_underweighting: A short identifier or defining value decides identity.
+                topic_only_similarity: Related topic could be mistaken for interchangeable content.
+                list_snapshot_collision: Similar list shells contain different members or snapshots.
+                page_role_collision: Similar wording appears in different page functions.
+                legal_context_collision: Generic legal text masks different meaning or identity.
+                long_document_local_overlap: A local match is not representative.
+                translation_equivalence: Equivalent meaning is expressed in another language.
+                paraphrase_equivalence: Equivalent meaning has low literal overlap.
+                containment_asymmetry: One-way preservation could be mistaken for equivalence or separation.
+                extraction_or_payload_limit: Missing or truncated content prevents a reliable decision.
+                parser_artifact_dominance: Parser artifacts dominate.
+                other: Another distinct risk exists.
+            - name: confidence_tier
+              description: Containment, translation, boilerplate, non-main, UI, parser, and other boundary judgments cannot be high; unresolved is low.
+              options:
+                high: Complete direct evidence is unambiguous and no boundary rule is involved.
+                medium: Resolved but a semantic boundary requires judgment.
+                low: Material uncertainty remains or the result is unresolved.

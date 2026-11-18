@@ -1,0 +1,48 @@
+{
+  "policy": "C0",
+  "candidate": "c0-label-boundary-v3",
+  "source_commit": "3aeaf1f1124c0dbd1b4c9061b3e5cb282ad6a17d",
+  "source_path": "tutorials/eval/dedup/critics/policies/c0",
+  "acceptance_passed": false,
+  "historical_final_personal120_original_three_runs": {
+    "correct_directions": 612,
+    "directions": 720,
+    "correct_pairs": 288,
+    "pairs": 360
+  },
+  "sha256": {
+    "critics/coverage_pair.jinja": "50cb778f76c98700d1892b6136217571e7cb078b7e45c6d4fa806a6b553c0972",
+    "critics/coverage_system.jinja": "7c731aa45133c6bece55f1ba8d641913fba00bfa02ab982064f8c426b77f11bc",
+    "critics/subject_pair.jinja": "bfa2c307843b6ee475bd716826e31e48ca0e707dd8dc5d53c1d8b8f92a6021f5",
+    "critics/subject_system.jinja": "cb4a7047d9a7327f9de64a7a4c08f4a52199c097b5273e88a60a54f000138557",
+    "critics/subject_verifier_pair.jinja": "3c5cc41b473414a084deb7f3d2abeca157befaacdf6ab918ed6cffe31fe4523e",
+    "critics/subject_verifier_system.jinja": "edc08dfca54151917ce09018bd03dfe86912b586c387a969e9deeebc856efe12",
+    "judge_config/fuzzy_pair_judge.yaml": "9e19f28005fa6cb6fe456fd7c912a90548173febd4e02fece6fe895d0cba9c2e",
+    "judge_config/pair.jinja": "a006876e0a6bf6d91211b36d59bf40a989c43ab82dde543914be9d6ae5d1fe69",
+    "judge_config/system.jinja": "691306885b712f915263c0163676ddaec85a028f57607a08478ca705eff86983"
+  },
+  "revision": "label-boundary-v3",
+  "baseline": {
+    "pr_commit": "3aeaf1f1124c0dbd1b4c9061b3e5cb282ad6a17d",
+    "candidate": "c0-boundary-v2",
+    "sha256": {
+      "critics/coverage_pair.jinja": "c6ff3752ce7a27afe317440a2f6f5542d3c91713723e4a2d0570f6468aa376b3",
+      "critics/coverage_system.jinja": "9f57e182af8b4044b6677297eda91cefb942186c9ec1fb1a5a8e6708378a92cb",
+      "critics/subject_pair.jinja": "56d1d317d465bc5e5bddeaad44791412dbe5257fed06ce059a5451a0d72e5997",
+      "critics/subject_system.jinja": "1aa8e6be7412829f651387edbac45b7315e0ea0ecfa38e0f7e00370d33326c99",
+      "critics/subject_verifier_pair.jinja": "4a82369465af4835831fe10f65be0cb1104a795b731f18e25ed868e13a085760",
+      "critics/subject_verifier_system.jinja": "ce4bd85540f9151e6c98715ef2155f14874141ad986c2ba693fa1446952fda49",
+      "judge_config/fuzzy_pair_judge.yaml": "9e19f28005fa6cb6fe456fd7c912a90548173febd4e02fece6fe895d0cba9c2e",
+      "judge_config/pair.jinja": "46607f298644e49beab95d3df33fb3411410e887a1feb0834ca2b1d3f63be1cd",
+      "judge_config/system.jinja": "a6d630ea7008f2a69115e8a78188bd925bc7aa8d6c28065412c8e49fb651fd4a"
+    }
+  },
+  "changes": [
+    "Treat title-only software names/version labels over unchanged generic download-support text as harmless when no actual software facts or offers are stated.",
+    "Distinguish loose directory/navigation keywords from actual provider-bound service offerings.",
+    "Apply the same scoped boundaries in the main judge and all critics; preserve substantive product, price, legal and operational facts.",
+    "Require an actually shared complete record/message before any harmless-label exception can allow replacement.",
+    "Require coverage loss IDs for loose directory keywords to identify an actual offering/fact beyond the bare category label."
+  ],
+  "development_iteration": 9
+}

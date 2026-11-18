@@ -252,6 +252,9 @@ navigation:
                   - page: Fuzzy Deduplication
                     path: ./main/pages/curate-text/process-data/deduplication/fuzzy.mdx
                     slug: fuzzy
+                  - page: C0 Retention Policy Candidate
+                    path: ./main/pages/curate-text/process-data/deduplication/c0-retention-policy.mdx
+                    slug: c0-retention-policy
                   - page: Semantic Deduplication
                     path: ./main/pages/curate-text/process-data/deduplication/semdedup.mdx
                     slug: semdedup

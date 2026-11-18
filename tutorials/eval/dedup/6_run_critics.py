@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 
 import critics
 import ray
+from critics.c0 import C0_CONFIG, C0_PROMPTS, C0AuditStage
 from critics.coverage import CoverageApplyStage, CoveragePrepareStage, coverage_column
 from critics.spans import DEFAULT_MAX_EVIDENCE_CHARS
 from critics.subject import (
@@ -74,6 +75,8 @@ class CriticWorkflow(LLMJudgeWorkflow):
     model_alias: str | None = None
     source_judge: str = "pair_semantic_judgment"
     subject: bool = False
+    c0: bool = False
+    critic_prompt_dir: Path | None = None
     max_evidence_chars: int = DEFAULT_MAX_EVIDENCE_CHARS
 
     # A row whose critic answer cannot be parsed is dropped by Data Designer, and a burst of such rows
@@ -91,6 +94,9 @@ class CriticWorkflow(LLMJudgeWorkflow):
             raise ValueError(msg)
 
         self._user_postprocessing = list(self.postprocessing_stages)
+        if self.c0:
+            self.critic_prompt_dir = C0_PROMPTS
+            self._user_postprocessing.insert(0, C0AuditStage(self.source_judge, self.max_evidence_chars))
         self.preprocessing_stages = [
             *self.preprocessing_stages,
             CoveragePrepareStage(self.source_judge, self.max_evidence_chars),
@@ -140,22 +146,22 @@ class CriticWorkflow(LLMJudgeWorkflow):
             self.postprocessing_stages = [
                 CoverageApplyStage(self.source_judge, self.max_evidence_chars),
                 SubjectPrepareStage(self.max_evidence_chars),
-                llm_stage(subject_column(self.model_alias)),
+                llm_stage(subject_column(self.model_alias, self.critic_prompt_dir)),
                 SubjectApplyStage(self.max_evidence_chars),
-                llm_stage(verifier_column(self.model_alias)),
+                llm_stage(verifier_column(self.model_alias, self.critic_prompt_dir)),
                 SubjectVerifierApplyStage(),
                 *self._user_postprocessing,
             ]
 
         # Dynamo startup detaches from Ray, so ship this package to the workers of the pipeline job that follows.
         ray.init(ignore_reinit_error=True, runtime_env={"py_modules": [critics]})
-        builder, providers = llm_config(coverage_column(self.model_alias))
+        builder, providers = llm_config(coverage_column(self.model_alias, self.critic_prompt_dir))
         return [("coverage", builder, providers, stage.get("runtime_env"), stage.get("num_workers"), [])]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--judge-config", default=str(_DEFAULT_JUDGE_CONFIG))
+    parser.add_argument("--judge-config", default=None, help="Model/serving YAML; --c0 defaults to the C0 config.")
     parser.add_argument("--input-path", required=True, help="Saved main-judge output from step 5.")
     parser.add_argument("--output-path", required=True, help="A separate directory for reviewed pairs.")
     parser.add_argument("--input-format", default="jsonl", choices=("jsonl", "parquet"))
@@ -163,6 +169,9 @@ def main() -> None:
     parser.add_argument("--source-judge", default="pair_semantic_judgment", help="Judge column to review.")
     parser.add_argument("--model-alias", default=None, help="Model alias from the YAML; defaults to the first model.")
     parser.add_argument("--subject", action="store_true", help="Verify subject-conflict proposals after coverage.")
+    parser.add_argument(
+        "--c0", action="store_true", help="Use candidate C0 critic prompts and annotate strict validity."
+    )
     parser.add_argument(
         "--max-evidence-chars",
         type=int,
@@ -174,7 +183,7 @@ def main() -> None:
     args = parser.parse_args()
 
     workflow = CriticWorkflow(
-        judge_config=args.judge_config,
+        judge_config=args.judge_config or (C0_CONFIG if args.c0 else _DEFAULT_JUDGE_CONFIG),
         input_path=args.input_path,
         output_path=args.output_path,
         input_format=args.input_format,
@@ -183,6 +192,7 @@ def main() -> None:
         model_alias=args.model_alias,
         source_judge=args.source_judge,
         subject=args.subject,
+        c0=args.c0,
         max_evidence_chars=args.max_evidence_chars,
     )
     with RayClient(ray_temp_dir=args.ray_temp_dir):
